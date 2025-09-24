@@ -158,10 +158,10 @@ const DashboardStats = () => {
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Unused Resources</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertTriangle className="h-4 w-4 text-slate-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">
+            <div className="text-2xl font-bold text-slate-600">
               {totals?.recursos_sem_uso_periodo || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -256,7 +256,7 @@ const DashboardStats = () => {
                     </Badge>
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-semibold text-warning">{item.total}</span>
+                    <span className="text-lg font-semibold text-slate-600">{item.total}</span>
                     <p className="text-xs text-muted-foreground">resources</p>
                   </div>
                 </div>

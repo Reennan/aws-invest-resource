@@ -120,7 +120,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-primary/5 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-gray-50 px-4">
       <div className="max-w-6xl w-full flex items-center gap-12">
         {/* Hero Section */}
         <div className="flex-1 hidden lg:block">
