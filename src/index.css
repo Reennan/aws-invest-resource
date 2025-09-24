@@ -2,95 +2,153 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* AWS Resource Monitor Design System - Modern Cloud Dashboard */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Backgrounds */
+    --background: 248 250 252;
+    --foreground: 15 23 42;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Card System */
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Popover System */
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - AWS Orange/Blue Inspired */
+    --primary: 24 144 255;
+    --primary-foreground: 255 255 255;
+    --primary-soft: 24 144 255 / 0.1;
+    
+    /* Secondary - Subtle Gray */
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Muted Colors */
+    --muted: 248 250 252;
+    --muted-foreground: 100 116 139;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Accent - Success Green */
+    --accent: 34 197 94;
+    --accent-foreground: 255 255 255;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Destructive - Error Red */
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status Colors */
+    --warning: 245 158 11;
+    --warning-foreground: 255 255 255;
+    --info: 59 130 246;
+    --info-foreground: 255 255 255;
+    --success: 34 197 94;
+    --success-foreground: 255 255 255;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Borders & Inputs */
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 24 144 255;
 
-    --radius: 0.5rem;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(24 144% 55%), hsl(59 130% 66%));
+    --gradient-secondary: linear-gradient(135deg, hsl(248 250% 97%), hsl(241 245% 94%));
+    --gradient-accent: linear-gradient(135deg, hsl(34 197% 54%), hsl(16 185% 52%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(351 83% 58%));
 
-    --sidebar-background: 0 0% 98%;
+    /* Shadows */
+    --shadow-soft: 0 1px 3px 0 hsl(15 23% 42% / 0.1), 0 1px 2px -1px hsl(15 23% 42% / 0.1);
+    --shadow-medium: 0 4px 6px -1px hsl(15 23% 42% / 0.1), 0 2px 4px -2px hsl(15 23% 42% / 0.1);
+    --shadow-large: 0 10px 15px -3px hsl(15 23% 42% / 0.1), 0 4px 6px -4px hsl(15 23% 42% / 0.1);
+    --shadow-glow: 0 0 20px hsl(24 144% 55% / 0.3);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Animation */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-primary: 240 5.9% 10%;
+    --radius: 0.75rem;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 51 65 85;
+    --sidebar-primary: 24 144 255;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 248 250 252;
+    --sidebar-accent-foreground: 51 65 85;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 24 144 255;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Core Backgrounds */
+    --background: 2 6 23;
+    --foreground: 248 250 252;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Card System */
+    --card: 15 23 42;
+    --card-foreground: 248 250 252;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover System */
+    --popover: 15 23 42;
+    --popover-foreground: 248 250 252;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - Bright AWS Blue */
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --primary-soft: 59 130 246 / 0.1;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary */
+    --secondary: 30 41 59;
+    --secondary-foreground: 203 213 225;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Muted */
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent */
+    --accent: 34 197 94;
+    --accent-foreground: 255 255 255;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Status Colors */
+    --warning: 245 158 11;
+    --warning-foreground: 15 23 42;
+    --info: 59 130 246;
+    --info-foreground: 255 255 255;
+    --success: 34 197 94;
+    --success-foreground: 255 255 255;
+
+    /* Borders & Inputs */
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 59 130 246;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(59 130% 66%), hsl(168 85% 57%));
+    --gradient-secondary: linear-gradient(135deg, hsl(30 41% 29%), hsl(15 23% 21%));
+    --gradient-accent: linear-gradient(135deg, hsl(34 197% 54%), hsl(142 76% 36%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(351 83% 58%));
+
+    /* Shadows */
+    --shadow-soft: 0 1px 3px 0 hsl(2 6% 13% / 0.3), 0 1px 2px -1px hsl(2 6% 13% / 0.3);
+    --shadow-medium: 0 4px 6px -1px hsl(2 6% 13% / 0.3), 0 2px 4px -2px hsl(2 6% 13% / 0.3);
+    --shadow-large: 0 10px 15px -3px hsl(2 6% 13% / 0.3), 0 4px 6px -4px hsl(2 6% 13% / 0.3);
+    --shadow-glow: 0 0 20px hsl(59 130% 66% / 0.3);
+
+    /* Sidebar */
+    --sidebar-background: 15 23 42;
+    --sidebar-foreground: 203 213 225;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 30 41 59;
+    --sidebar-accent-foreground: 203 213 225;
+    --sidebar-border: 51 65 85;
+    --sidebar-ring: 59 130 246;
   }
 }
 
