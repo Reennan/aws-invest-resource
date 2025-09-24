@@ -62,9 +62,9 @@ const Index = () => {
       {/* Dashboard Stats */}
       <DashboardStats key={refreshing ? 'refreshing' : 'normal'} />
 
-      {/* Welcome Message for new users */}
-      {(!profile.can_view_clusters && !profile.can_view_reports) && (
-        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl p-6">
+        {/* Welcome Message for new users */}
+        {(!profile.can_view_clusters && !profile.can_view_reports) && (
+          <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0">
               <Cloud className="h-5 w-5 text-primary-foreground" />

@@ -113,14 +113,14 @@ const DashboardStats = () => {
 
   const getTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      'EC2': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'S3': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'RDS': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-      'Lambda': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-      'ELB': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300',
-      'CloudWatch': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+      'EC2': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+      'S3': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+      'RDS': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+      'Lambda': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+      'ELB': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
+      'CloudWatch': 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   };
 
   return (
