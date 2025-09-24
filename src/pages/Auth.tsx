@@ -76,7 +76,7 @@ const Auth = () => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: any = {};
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path) {
             fieldErrors[err.path[0]] = err.message;
           }
@@ -109,7 +109,7 @@ const Auth = () => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: any = {};
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path) {
             fieldErrors[err.path[0]] = err.message;
           }

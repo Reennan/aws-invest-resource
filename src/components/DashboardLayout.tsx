@@ -177,7 +177,7 @@ const DashboardLayout = () => {
                           variant={getRoleBadgeVariant(profile.role)} 
                           className="text-xs px-2 py-0"
                         >
-                          {profile.role}
+                          {profile.role === 'admin' ? 'Admin' : 'Viewer'}
                         </Badge>
                         <div className="flex items-center gap-1">
                           <Activity className="h-3 w-3 text-success" />
@@ -226,8 +226,13 @@ const DashboardLayout = () => {
           </Button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <Avatar className="h-7 w-7">
+              <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                {getInitials(profile.name)}
+              </AvatarFallback>
+            </Avatar>
             <Badge variant={getRoleBadgeVariant(profile.role)} className="text-xs">
-              {profile.role}
+              {profile.role === 'admin' ? 'Admin' : 'Viewer'}
             </Badge>
             <div className="flex items-center gap-1">
               <Activity className="h-3 w-3 text-success" />
