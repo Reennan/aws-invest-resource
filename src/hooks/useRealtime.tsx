@@ -36,42 +36,62 @@ export const useRealtime = (onDataChange?: (data: RealtimeData) => void) => {
   }, [onDataChange, toast]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session) {
+      setConnected(false);
+      return;
+    }
 
-    console.log('Setting up realtime connection...');
-    
-    // Subscribe to the resources channel
-    const channel = supabase
-      .channel('topic:resources')
-      .on('broadcast', { event: '*' }, (payload: any) => {
-        handleRealtimeUpdate(payload);
-      })
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-        setConnected(status === 'SUBSCRIBED');
-        
-        if (status === 'SUBSCRIBED') {
-          toast({
-            title: "Connected",
-            description: "Real-time updates enabled",
-            duration: 2000,
+    let channel: any = null;
+    let isActive = true;
+
+    const setupConnection = async () => {
+      try {
+        // Subscribe to the resources channel
+        channel = supabase
+          .channel('topic:resources')
+          .on('broadcast', { event: '*' }, (payload: any) => {
+            if (isActive) {
+              handleRealtimeUpdate(payload);
+            }
+          })
+          .subscribe((status) => {
+            if (!isActive) return;
+            
+            setConnected(status === 'SUBSCRIBED');
+            
+            if (status === 'SUBSCRIBED') {
+              // Only show toast once when first connecting
+              if (!connected) {
+                toast({
+                  title: "Conectado",
+                  description: "Atualizações em tempo real ativadas",
+                  duration: 2000,
+                });
+              }
+            } else if (status === 'CHANNEL_ERROR') {
+              toast({
+                title: "Erro de Conexão",
+                description: "Falha ao conectar atualizações em tempo real",
+                variant: "destructive",
+                duration: 3000,
+              });
+            }
           });
-        } else if (status === 'CHANNEL_ERROR') {
-          toast({
-            title: "Connection Error",
-            description: "Failed to connect to real-time updates",
-            variant: "destructive",
-            duration: 3000,
-          });
-        }
-      });
+      } catch (error) {
+        console.error('Error setting up realtime connection:', error);
+      }
+    };
+
+    setupConnection();
 
     return () => {
-      console.log('Cleaning up realtime connection...');
-      supabase.removeChannel(channel);
+      isActive = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
       setConnected(false);
     };
-  }, [session, handleRealtimeUpdate, toast]);
+  }, [session]);
 
   return {
     connected,
