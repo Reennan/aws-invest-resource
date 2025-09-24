@@ -129,20 +129,20 @@ const DashboardStats = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Clusters</CardTitle>
+            <CardTitle className="text-sm font-medium">Clusters Ativos</CardTitle>
             <Server className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totals?.clusters_disponiveis || 0}</div>
             <p className="text-xs text-muted-foreground">
-              AWS account clusters
+              Clusters de contas AWS
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resources Created</CardTitle>
+            <CardTitle className="text-sm font-medium">Recursos Criados</CardTitle>
             <Plus className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
@@ -150,14 +150,14 @@ const DashboardStats = () => {
               {totals?.recursos_criados_periodo || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Last 30 days
+              Últimos 30 dias
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unused Resources</CardTitle>
+            <CardTitle className="text-sm font-medium">Recursos Sem Uso</CardTitle>
             <AlertTriangle className="h-4 w-4 text-slate-600" />
           </CardHeader>
           <CardContent>
@@ -165,25 +165,25 @@ const DashboardStats = () => {
               {totals?.recursos_sem_uso_periodo || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Need attention
+              Precisam de atenção
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Real-time Status</CardTitle>
+            <CardTitle className="text-sm font-medium">Status Tempo Real</CardTitle>
             <Activity className={`h-4 w-4 ${connected ? 'text-success' : 'text-muted-foreground'}`} />
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <div className={`h-2 w-2 rounded-full ${connected ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
               <span className="text-sm font-medium">
-                {connected ? 'Connected' : 'Disconnected'}
+                {connected ? 'Conectado' : 'Desconectado'}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {lastUpdate ? `Updated ${lastUpdate.toLocaleTimeString()}` : 'No updates yet'}
+              {lastUpdate ? `Atualizado ${lastUpdate.toLocaleTimeString()}` : 'Nenhuma atualização ainda'}
             </p>
           </CardContent>
         </Card>
@@ -194,13 +194,13 @@ const DashboardStats = () => {
         {/* Recent Resources */}
         <Card className="shadow-medium border-border/50">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Recently Created</CardTitle>
+            <CardTitle className="text-lg font-semibold">Criados Recentemente</CardTitle>
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${refreshing ? 'animate-spin' : ''}`} />
           </CardHeader>
           <CardContent className="space-y-4">
             {recentResources.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No recent resources found
+                Nenhum recurso recente encontrado
               </p>
             ) : (
               recentResources.slice(0, 5).map((resource) => (
@@ -227,7 +227,7 @@ const DashboardStats = () => {
                         rel="noopener noreferrer"
                         className="text-xs text-primary hover:underline"
                       >
-                        AWS Console →
+                        Console AWS →
                       </a>
                     )}
                   </div>
@@ -240,12 +240,12 @@ const DashboardStats = () => {
         {/* Unused by Type */}
         <Card className="shadow-medium border-border/50">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Unused by Type</CardTitle>
+            <CardTitle className="text-lg font-semibold">Sem Uso por Tipo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {unusedByType.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No unused resources found
+                Nenhum recurso sem uso encontrado
               </p>
             ) : (
               unusedByType.map((item) => (
@@ -257,7 +257,7 @@ const DashboardStats = () => {
                   </div>
                   <div className="text-right">
                     <span className="text-lg font-semibold text-slate-600">{item.total}</span>
-                    <p className="text-xs text-muted-foreground">resources</p>
+                    <p className="text-xs text-muted-foreground">recursos</p>
                   </div>
                 </div>
               ))

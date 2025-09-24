@@ -120,14 +120,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         toast({
-          title: "Error",
+          title: "Erro",
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Success",
-          description: "Signed in successfully!",
+          title: "Sucesso",
+          description: "Login realizado com sucesso!",
         });
       }
 
@@ -160,14 +160,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         toast({
-          title: "Error",
+          title: "Erro",
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Success",
-          description: "Please check your email to verify your account!",
+          title: "Sucesso",
+          description: "Verifique seu e-mail para confirmar sua conta!",
         });
       }
 
@@ -190,8 +190,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setProfile(null);
       
       toast({
-        title: "Success",
-        description: "Signed out successfully!",
+        title: "Sucesso",
+        description: "Logout realizado com sucesso!",
       });
     } catch (error: any) {
       toast({
@@ -220,8 +220,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         setProfile(prev => prev ? { ...prev, ...updates } : null);
         toast({
-          title: "Success",
-          description: "Profile updated successfully!",
+          title: "Sucesso",
+          description: "Perfil atualizado com sucesso!",
         });
       }
 

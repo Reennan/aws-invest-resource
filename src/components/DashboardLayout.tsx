@@ -45,10 +45,10 @@ const DashboardLayout = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground">Carregando perfil...</p>
+            </div>
       </div>
     );
   }
@@ -69,14 +69,14 @@ const DashboardLayout = () => {
       permission: profile.can_view_clusters
     },
     {
-      name: 'Reports',
+      name: 'Relatórios',
       href: '/reports',
       icon: FileText,
       current: location.pathname === '/reports',
       permission: profile.can_view_reports
     },
     {
-      name: 'Users',
+      name: 'Usuários',
       href: '/admin/users',
       icon: Users,
       current: location.pathname === '/admin/users',
@@ -181,7 +181,7 @@ const DashboardLayout = () => {
                         </Badge>
                         <div className="flex items-center gap-1">
                           <Activity className="h-3 w-3 text-success" />
-                          <span className="text-xs text-success">Online</span>
+              <span className="text-xs text-success">Online</span>
                         </div>
                       </div>
                     </div>
@@ -199,13 +199,13 @@ const DashboardLayout = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/account" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Account Settings</span>
+                    <span>Configurações da Conta</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
+                  <span>Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
