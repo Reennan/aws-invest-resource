@@ -47,8 +47,8 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -120,17 +120,17 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Side - Welcome */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gray-900 text-white flex-col justify-center px-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-primary text-primary-foreground flex-col justify-center px-12">
         <div className="max-w-md">
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-white flex items-center justify-center">
-              <Cloud className="h-6 w-6 text-gray-900" />
+            <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center">
+              <Cloud className="h-6 w-6 text-foreground" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">AWS Resource Monitor</h1>
-              <p className="text-gray-400 text-sm">Dashboard de Recursos</p>
+              <p className="text-muted-foreground text-sm">Dashboard de Recursos</p>
             </div>
           </div>
           
@@ -138,21 +138,21 @@ const Auth = () => {
             Bem-vindo
           </h2>
           
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-primary-foreground/80 mb-8">
             Monitore e analise seus recursos AWS em tempo real com nossa plataforma profissional.
           </p>
           
-          <div className="space-y-4 text-gray-400">
+          <div className="space-y-4 text-primary-foreground/70">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="w-2 h-2 bg-accent rounded-full"></div>
               <span>Monitoramento em tempo real</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="w-2 h-2 bg-accent rounded-full"></div>
               <span>Controle de acesso baseado em funções</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="w-2 h-2 bg-accent rounded-full"></div>
               <span>Relatórios detalhados e exportação</span>
             </div>
           </div>
@@ -165,13 +165,13 @@ const Auth = () => {
           {/* Mobile Header */}
           <div className="text-center mb-8 lg:hidden">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gray-900 flex items-center justify-center">
-                <Cloud className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+                <Cloud className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">AWS Resource Monitor</h1>
+              <h1 className="text-xl font-bold text-foreground">AWS Resource Monitor</h1>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo</h2>
-            <p className="text-gray-600">Acesse sua conta ou crie uma nova</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo</h2>
+            <p className="text-muted-foreground">Acesse sua conta ou crie uma nova</p>
           </div>
 
           {/* Auth Toggle */}
@@ -181,8 +181,8 @@ const Auth = () => {
               onClick={() => setIsSignUp(false)}
               className={`flex-1 py-3 px-4 text-center font-medium transition-all duration-200 ${
                 !isSignUp 
-                  ? 'text-gray-900 border-b-2 border-gray-900' 
-                  : 'text-gray-500 border-b border-gray-200 hover:text-gray-700'
+                  ? 'text-foreground border-b-2 border-primary' 
+                  : 'text-muted-foreground border-b border-border hover:text-foreground'
               }`}
             >
               Entrar
@@ -192,8 +192,8 @@ const Auth = () => {
               onClick={() => setIsSignUp(true)}
               className={`flex-1 py-3 px-4 text-center font-medium transition-all duration-200 ${
                 isSignUp 
-                  ? 'text-gray-900 border-b-2 border-gray-900' 
-                  : 'text-gray-500 border-b border-gray-200 hover:text-gray-700'
+                  ? 'text-foreground border-b-2 border-primary' 
+                  : 'text-muted-foreground border-b border-border hover:text-foreground'
               }`}
             >
               Criar Conta
@@ -204,25 +204,25 @@ const Auth = () => {
           {!isSignUp && (
             <form onSubmit={handleSignIn} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="signin-email" className="text-gray-900 font-medium">E-mail</Label>
+                <Label htmlFor="signin-email" className="text-foreground font-medium">E-mail</Label>
                 <Input
                   id="signin-email"
                   type="email"
                   value={signInData.email}
                   onChange={(e) => setSignInData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="seu.email@empresa.com"
-                  className={`h-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                    errors.email ? 'border-red-500' : ''
+                  className={`h-12 ${
+                    errors.email ? 'border-destructive' : ''
                   }`}
                   disabled={isSubmitting}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
+                  <p className="text-sm text-destructive">{errors.email}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signin-password" className="text-gray-900 font-medium">Senha</Label>
+                <Label htmlFor="signin-password" className="text-foreground font-medium">Senha</Label>
                 <div className="relative">
                   <Input
                     id="signin-password"
@@ -230,8 +230,8 @@ const Auth = () => {
                     value={signInData.password}
                     onChange={(e) => setSignInData(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Digite sua senha"
-                    className={`h-12 pr-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                      errors.password ? 'border-red-500' : ''
+                    className={`h-12 pr-12 ${
+                      errors.password ? 'border-destructive' : ''
                     }`}
                     disabled={isSubmitting}
                   />
@@ -244,20 +244,20 @@ const Auth = () => {
                     disabled={isSubmitting}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
+                  <p className="text-sm text-destructive">{errors.password}</p>
                 )}
               </div>
               
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium" 
+                className="w-full h-12" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Entrando...' : 'Entrar'}
@@ -269,61 +269,61 @@ const Auth = () => {
           {isSignUp && (
             <form onSubmit={handleSignUp} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="signup-name" className="text-gray-900 font-medium">Nome Completo</Label>
+                <Label htmlFor="signup-name" className="text-foreground font-medium">Nome Completo</Label>
                 <Input
                   id="signup-name"
                   type="text"
                   value={signUpData.name}
                   onChange={(e) => setSignUpData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="João Silva"
-                  className={`h-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                    errors.name ? 'border-red-500' : ''
+                  className={`h-12 ${
+                    errors.name ? 'border-destructive' : ''
                   }`}
                   disabled={isSubmitting}
                 />
                 {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name}</p>
+                  <p className="text-sm text-destructive">{errors.name}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-email" className="text-gray-900 font-medium">E-mail</Label>
+                <Label htmlFor="signup-email" className="text-foreground font-medium">E-mail</Label>
                 <Input
                   id="signup-email"
                   type="email"
                   value={signUpData.email}
                   onChange={(e) => setSignUpData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="seu.email@empresa.com"
-                  className={`h-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                    errors.email ? 'border-red-500' : ''
+                  className={`h-12 ${
+                    errors.email ? 'border-destructive' : ''
                   }`}
                   disabled={isSubmitting}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
+                  <p className="text-sm text-destructive">{errors.email}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-phone" className="text-gray-900 font-medium">Telefone (Opcional)</Label>
+                <Label htmlFor="signup-phone" className="text-foreground font-medium">Telefone (Opcional)</Label>
                 <Input
                   id="signup-phone"
                   type="tel"
                   value={signUpData.phone}
                   onChange={(e) => setSignUpData(prev => ({ ...prev, phone: e.target.value }))}
                   placeholder="(11) 99999-9999"
-                  className={`h-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                    errors.phone ? 'border-red-500' : ''
+                  className={`h-12 ${
+                    errors.phone ? 'border-destructive' : ''
                   }`}
                   disabled={isSubmitting}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-red-600">{errors.phone}</p>
+                  <p className="text-sm text-destructive">{errors.phone}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-password" className="text-gray-900 font-medium">Senha</Label>
+                <Label htmlFor="signup-password" className="text-foreground font-medium">Senha</Label>
                 <div className="relative">
                   <Input
                     id="signup-password"
@@ -331,8 +331,8 @@ const Auth = () => {
                     value={signUpData.password}
                     onChange={(e) => setSignUpData(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Escolha uma senha forte"
-                    className={`h-12 pr-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                      errors.password ? 'border-red-500' : ''
+                    className={`h-12 pr-12 ${
+                      errors.password ? 'border-destructive' : ''
                     }`}
                     disabled={isSubmitting}
                   />
@@ -345,19 +345,19 @@ const Auth = () => {
                     disabled={isSubmitting}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
+                  <p className="text-sm text-destructive">{errors.password}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password" className="text-gray-900 font-medium">Confirmar Senha</Label>
+                <Label htmlFor="signup-confirm-password" className="text-foreground font-medium">Confirmar Senha</Label>
                 <div className="relative">
                   <Input
                     id="signup-confirm-password"
@@ -365,8 +365,8 @@ const Auth = () => {
                     value={signUpData.confirmPassword}
                     onChange={(e) => setSignUpData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     placeholder="Confirme sua senha"
-                    className={`h-12 pr-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900 ${
-                      errors.confirmPassword ? 'border-red-500' : ''
+                    className={`h-12 pr-12 ${
+                      errors.confirmPassword ? 'border-destructive' : ''
                     }`}
                     disabled={isSubmitting}
                   />
@@ -375,24 +375,24 @@ const Auth = () => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() => setShowPassword(!showPassword)}
                     disabled={isSubmitting}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-600">{errors.confirmPassword}</p>
+                  <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                 )}
               </div>
               
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium" 
+                className="w-full h-12" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Criando conta...' : 'Criar Conta'}
