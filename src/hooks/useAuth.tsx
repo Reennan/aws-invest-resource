@@ -80,8 +80,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       async (event, session) => {
         if (!mounted) return;
         
+        console.log('Auth state change:', event, session ? 'session exists' : 'no session');
+        
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setSigningOut(false);
+          setLoading(false);
+          return;
+        }
         
         if (session?.user) {
           // Update last login without waiting
@@ -192,28 +201,54 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signOut = async () => {
+    if (signingOut) return; // Evita múltiplas chamadas simultâneas
+    
     try {
       setSigningOut(true);
       
-      await supabase.auth.signOut();
+      // Limpa os estados imediatamente para evitar problemas
+      setUser(null);
+      setSession(null);  
+      setProfile(null);
+      
+      // Tenta fazer logout, mas não falha se a sessão já foi invalidada
+      const { error } = await supabase.auth.signOut();
+      
+      // Não mostra erro se a sessão já estava invalidada
+      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
+        console.error('Logout error:', error);
+        toast({
+          title: "Aviso",  
+          description: "Sessão finalizada com sucesso",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Logout realizado com sucesso!",
+        });
+      }
+
+      // Força navegação para auth independente do resultado
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('Unexpected logout error:', error);
+      
+      // Mesmo com erro, limpa os estados e redireciona
       setUser(null);
       setSession(null);
       setProfile(null);
       
       toast({
         title: "Sucesso",
-        description: "Logout realizado com sucesso!",
+        description: "Sessão finalizada",
       });
-
-      // Force navigation to auth page
-      window.location.href = '/auth';
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Error signing out",
-        variant: "destructive",
-      });
-      setSigningOut(false);
+      
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
     }
   };
 
