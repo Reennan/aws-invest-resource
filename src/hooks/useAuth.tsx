@@ -71,13 +71,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthProvider: Auth state changed', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('AuthProvider: User exists, updating last login and fetching profile');
           // Update last login
           await supabase
             .from('users_profile')
@@ -89,22 +93,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             fetchProfile(session.user.id);
           }, 0);
         } else {
+          console.log('AuthProvider: No user, clearing profile');
           setProfile(null);
         }
         
+        console.log('AuthProvider: Setting loading to false (from onAuthStateChange)');
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthProvider: Got existing session', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('AuthProvider: Fetching profile for existing session');
         fetchProfile(session.user.id);
       }
       
+      console.log('AuthProvider: Setting loading to false (from getSession)');
       setLoading(false);
     });
 

@@ -24,6 +24,7 @@ const signUpSchema = z.object({
 
 const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
+  console.log('Auth component - loading:', loading, 'user:', !!user);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
