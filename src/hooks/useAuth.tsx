@@ -71,53 +71,51 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
-    console.log('AuthProvider: Setting up auth state listener');
+    let mounted = true;
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AuthProvider: Auth state changed', event, !!session);
+        if (!mounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('AuthProvider: User exists, updating last login and fetching profile');
-          // Update last login
-          await supabase
+          // Update last login without waiting
+          supabase
             .from('users_profile')
             .update({ last_login: new Date().toISOString() })
             .eq('auth_user_id', session.user.id);
           
-          // Defer profile fetch to avoid deadlock
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
+          // Fetch profile
+          fetchProfile(session.user.id);
         } else {
-          console.log('AuthProvider: No user, clearing profile');
           setProfile(null);
         }
         
-        console.log('AuthProvider: Setting loading to false (from onAuthStateChange)');
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthProvider: Got existing session', !!session);
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('AuthProvider: Fetching profile for existing session');
         fetchProfile(session.user.id);
       }
       
-      console.log('AuthProvider: Setting loading to false (from getSession)');
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -202,6 +200,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "Sucesso",
         description: "Logout realizado com sucesso!",
       });
+
+      // Force navigation to auth page
+      window.location.href = '/auth';
     } catch (error: any) {
       toast({
         title: "Error",
