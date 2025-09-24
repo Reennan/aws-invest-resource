@@ -24,6 +24,7 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  signingOut: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
@@ -191,6 +193,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
+      setSigningOut(true);
+      
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
@@ -209,6 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         description: "Error signing out",
         variant: "destructive",
       });
+      setSigningOut(false);
     }
   };
 
@@ -251,6 +256,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     profile,
     loading,
+    signingOut,
     signIn,
     signUp,
     signOut,
