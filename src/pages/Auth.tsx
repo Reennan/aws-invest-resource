@@ -15,7 +15,6 @@ const signInSchema = z.object({
 const signUpSchema = z.object({
   name: z.string().trim().min(1, 'Nome é obrigatório').max(100),
   email: z.string().email('E-mail inválido').max(255),
-  phone: z.string().trim().max(20).optional(),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(100),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -38,7 +37,6 @@ const Auth = () => {
   const [signUpData, setSignUpData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -96,8 +94,7 @@ const Auth = () => {
       const { error } = await signUp(
         validatedData.email,
         validatedData.password,
-        validatedData.name,
-        validatedData.phone || undefined
+        validatedData.name
       );
       
       if (!error) {
@@ -120,69 +117,29 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Side - Welcome */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary text-primary-foreground flex-col justify-center px-12">
-        <div className="max-w-md">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center">
-              <Cloud className="h-6 w-6 text-foreground" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-6">
+            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mr-3">
+              <Cloud className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">AWS Resource Monitor</h1>
-              <p className="text-muted-foreground text-sm">Dashboard de Recursos</p>
-            </div>
-          </div>
-          
-          <h2 className="text-4xl font-bold mb-6">
-            Bem-vindo
-          </h2>
-          
-          <p className="text-xl text-primary-foreground/80 mb-8">
-            Monitore e analise seus recursos AWS em tempo real com nossa plataforma profissional.
-          </p>
-          
-          <div className="space-y-4 text-primary-foreground/70">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span>Monitoramento em tempo real</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span>Controle de acesso baseado em funções</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span>Relatórios detalhados e exportação</span>
-            </div>
+            <h1 className="text-2xl font-bold text-foreground">AWS Resource Monitor</h1>
           </div>
         </div>
-      </div>
 
-      {/* Right Side - Auth Form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          {/* Mobile Header */}
-          <div className="text-center mb-8 lg:hidden">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-                <Cloud className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">AWS Resource Monitor</h1>
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo</h2>
-            <p className="text-muted-foreground">Acesse sua conta ou crie uma nova</p>
-          </div>
-
-          {/* Auth Toggle */}
-          <div className="flex mb-8">
+        {/* Auth Card */}
+        <div className="bg-card border border-border rounded-lg shadow-sm p-6 space-y-6">
+          {/* Toggle Buttons */}
+          <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg">
             <button
               type="button"
               onClick={() => setIsSignUp(false)}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-all duration-200 ${
+              className={`py-2 px-4 text-sm font-medium rounded-md transition-all ${
                 !isSignUp 
-                  ? 'text-foreground border-b-2 border-primary' 
-                  : 'text-muted-foreground border-b border-border hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Entrar
@@ -190,10 +147,10 @@ const Auth = () => {
             <button
               type="button"
               onClick={() => setIsSignUp(true)}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-all duration-200 ${
+              className={`py-2 px-4 text-sm font-medium rounded-md transition-all ${
                 isSignUp 
-                  ? 'text-foreground border-b-2 border-primary' 
-                  : 'text-muted-foreground border-b border-border hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Criar Conta
@@ -202,18 +159,16 @@ const Auth = () => {
 
           {/* Sign In Form */}
           {!isSignUp && (
-            <form onSubmit={handleSignIn} className="space-y-6">
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signin-email" className="text-foreground font-medium">E-mail</Label>
+                <Label htmlFor="signin-email" className="text-sm font-medium">E-mail</Label>
                 <Input
                   id="signin-email"
                   type="email"
                   value={signInData.email}
                   onChange={(e) => setSignInData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="seu.email@empresa.com"
-                  className={`h-12 ${
-                    errors.email ? 'border-destructive' : ''
-                  }`}
+                  className={errors.email ? 'border-destructive' : ''}
                   disabled={isSubmitting}
                 />
                 {errors.email && (
@@ -222,7 +177,7 @@ const Auth = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signin-password" className="text-foreground font-medium">Senha</Label>
+                <Label htmlFor="signin-password" className="text-sm font-medium">Senha</Label>
                 <div className="relative">
                   <Input
                     id="signin-password"
@@ -230,16 +185,14 @@ const Auth = () => {
                     value={signInData.password}
                     onChange={(e) => setSignInData(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Digite sua senha"
-                    className={`h-12 pr-12 ${
-                      errors.password ? 'border-destructive' : ''
-                    }`}
+                    className={`pr-10 ${errors.password ? 'border-destructive' : ''}`}
                     disabled={isSubmitting}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isSubmitting}
                   >
@@ -257,7 +210,7 @@ const Auth = () => {
               
               <Button 
                 type="submit" 
-                className="w-full h-12" 
+                className="w-full" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Entrando...' : 'Entrar'}
@@ -267,18 +220,16 @@ const Auth = () => {
 
           {/* Sign Up Form */}
           {isSignUp && (
-            <form onSubmit={handleSignUp} className="space-y-6">
+            <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-name" className="text-foreground font-medium">Nome Completo</Label>
+                <Label htmlFor="signup-name" className="text-sm font-medium">Nome Completo</Label>
                 <Input
                   id="signup-name"
                   type="text"
                   value={signUpData.name}
                   onChange={(e) => setSignUpData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="João Silva"
-                  className={`h-12 ${
-                    errors.name ? 'border-destructive' : ''
-                  }`}
+                  className={errors.name ? 'border-destructive' : ''}
                   disabled={isSubmitting}
                 />
                 {errors.name && (
@@ -287,16 +238,14 @@ const Auth = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-email" className="text-foreground font-medium">E-mail</Label>
+                <Label htmlFor="signup-email" className="text-sm font-medium">E-mail</Label>
                 <Input
                   id="signup-email"
                   type="email"
                   value={signUpData.email}
                   onChange={(e) => setSignUpData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="seu.email@empresa.com"
-                  className={`h-12 ${
-                    errors.email ? 'border-destructive' : ''
-                  }`}
+                  className={errors.email ? 'border-destructive' : ''}
                   disabled={isSubmitting}
                 />
                 {errors.email && (
@@ -305,25 +254,7 @@ const Auth = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-phone" className="text-foreground font-medium">Telefone (Opcional)</Label>
-                <Input
-                  id="signup-phone"
-                  type="tel"
-                  value={signUpData.phone}
-                  onChange={(e) => setSignUpData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="(11) 99999-9999"
-                  className={`h-12 ${
-                    errors.phone ? 'border-destructive' : ''
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signup-password" className="text-foreground font-medium">Senha</Label>
+                <Label htmlFor="signup-password" className="text-sm font-medium">Senha</Label>
                 <div className="relative">
                   <Input
                     id="signup-password"
@@ -331,16 +262,14 @@ const Auth = () => {
                     value={signUpData.password}
                     onChange={(e) => setSignUpData(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Escolha uma senha forte"
-                    className={`h-12 pr-12 ${
-                      errors.password ? 'border-destructive' : ''
-                    }`}
+                    className={`pr-10 ${errors.password ? 'border-destructive' : ''}`}
                     disabled={isSubmitting}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isSubmitting}
                   >
@@ -357,7 +286,7 @@ const Auth = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password" className="text-foreground font-medium">Confirmar Senha</Label>
+                <Label htmlFor="signup-confirm-password" className="text-sm font-medium">Confirmar Senha</Label>
                 <div className="relative">
                   <Input
                     id="signup-confirm-password"
@@ -365,17 +294,15 @@ const Auth = () => {
                     value={signUpData.confirmPassword}
                     onChange={(e) => setSignUpData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     placeholder="Confirme sua senha"
-                    className={`h-12 pr-12 ${
-                      errors.confirmPassword ? 'border-destructive' : ''
-                    }`}
+                    className={`pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                     disabled={isSubmitting}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isSubmitting}
                   >
                     {showConfirmPassword ? (
@@ -392,7 +319,7 @@ const Auth = () => {
               
               <Button 
                 type="submit" 
-                className="w-full h-12" 
+                className="w-full" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Criando conta...' : 'Criar Conta'}
