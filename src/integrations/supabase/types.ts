@@ -14,16 +14,327 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clusters: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      resources_created: {
+        Row: {
+          account_name: string | null
+          cluster_id: string | null
+          console_link: string | null
+          created_at: string | null
+          id: string
+          manage_status: string | null
+          name: string | null
+          raw: Json | null
+          run_id: string | null
+          type: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          cluster_id?: string | null
+          console_link?: string | null
+          created_at?: string | null
+          id?: string
+          manage_status?: string | null
+          name?: string | null
+          raw?: Json | null
+          run_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          cluster_id?: string | null
+          console_link?: string | null
+          created_at?: string | null
+          id?: string
+          manage_status?: string | null
+          name?: string | null
+          raw?: Json | null
+          run_id?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_created_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_created_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources_unused: {
+        Row: {
+          account_name: string | null
+          cluster_id: string | null
+          console_link: string | null
+          days_without_use: number | null
+          empty_receives: number | null
+          id: string
+          invocations: number | null
+          messages_not_visible: number | null
+          messages_received: number | null
+          messages_sent: number | null
+          method: string | null
+          metrics: Json | null
+          name: string | null
+          raw: Json | null
+          resource_id: string | null
+          route: string | null
+          run_id: string | null
+          status: string | null
+          total_requests: number | null
+          type: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          cluster_id?: string | null
+          console_link?: string | null
+          days_without_use?: number | null
+          empty_receives?: number | null
+          id?: string
+          invocations?: number | null
+          messages_not_visible?: number | null
+          messages_received?: number | null
+          messages_sent?: number | null
+          method?: string | null
+          metrics?: Json | null
+          name?: string | null
+          raw?: Json | null
+          resource_id?: string | null
+          route?: string | null
+          run_id?: string | null
+          status?: string | null
+          total_requests?: number | null
+          type?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          cluster_id?: string | null
+          console_link?: string | null
+          days_without_use?: number | null
+          empty_receives?: number | null
+          id?: string
+          invocations?: number | null
+          messages_not_visible?: number | null
+          messages_received?: number | null
+          messages_sent?: number | null
+          method?: string | null
+          metrics?: Json | null
+          name?: string | null
+          raw?: Json | null
+          resource_id?: string | null
+          route?: string | null
+          run_id?: string | null
+          status?: string | null
+          total_requests?: number | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_unused_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_unused_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      runs: {
+        Row: {
+          cluster_id: string | null
+          created_count: number
+          error: Json | null
+          id: string
+          region: string
+          resource_created_days: number
+          resource_unused_days: number
+          run_ts: string
+          succeeded: boolean | null
+          unused_count: number
+        }
+        Insert: {
+          cluster_id?: string | null
+          created_count: number
+          error?: Json | null
+          id?: string
+          region: string
+          resource_created_days: number
+          resource_unused_days: number
+          run_ts: string
+          succeeded?: boolean | null
+          unused_count: number
+        }
+        Update: {
+          cluster_id?: string | null
+          created_count?: number
+          error?: Json | null
+          id?: string
+          region?: string
+          resource_created_days?: number
+          resource_unused_days?: number
+          run_ts?: string
+          succeeded?: boolean | null
+          unused_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "runs_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_cluster_permissions: {
+        Row: {
+          can_view: boolean | null
+          cluster_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          can_view?: boolean | null
+          cluster_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          can_view?: boolean | null
+          cluster_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_cluster_permissions_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_cluster_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users_profile: {
+        Row: {
+          auth_user_id: string | null
+          can_manage_users: boolean | null
+          can_view_clusters: boolean | null
+          can_view_dashboard: boolean | null
+          can_view_reports: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          last_login: string | null
+          name: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          auth_user_id?: string | null
+          can_manage_users?: boolean | null
+          can_view_clusters?: boolean | null
+          can_view_dashboard?: boolean | null
+          can_view_reports?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          auth_user_id?: string | null
+          can_manage_users?: boolean | null
+          can_view_clusters?: boolean | null
+          can_view_dashboard?: boolean | null
+          can_view_reports?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      v_dashboard_totals: {
+        Row: {
+          clusters_disponiveis: number | null
+          generated_at: string | null
+          recursos_criados_periodo: number | null
+          recursos_sem_uso_periodo: number | null
+        }
+        Relationships: []
+      }
+      v_unused_by_type: {
+        Row: {
+          total: number | null
+          type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_user_profile_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "viewer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +461,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["viewer", "admin"],
+    },
   },
 } as const
