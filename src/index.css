@@ -161,22 +161,76 @@
     @apply bg-background text-foreground;
   }
 
-  /* Remove yellow autocomplete background */
+  /* Remove ALL yellow autocomplete background - COMPLETE FIX */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
-  input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
+  input:-webkit-autofill:active,
+  input:-webkit-autofill:valid,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
-    background-color: white !important;
+    background-color: hsl(var(--background)) !important;
+    background-image: none !important;
+    color: hsl(var(--foreground)) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
   }
 
   .dark input:-webkit-autofill,
   .dark input:-webkit-autofill:hover,
   .dark input:-webkit-autofill:focus,
-  .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px hsl(var(--card)) inset !important;
+  .dark input:-webkit-autofill:active,
+  .dark input:-webkit-autofill:valid,
+  .dark select:-webkit-autofill,
+  .dark select:-webkit-autofill:hover,
+  .dark select:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill,
+  .dark textarea:-webkit-autofill:hover,
+  .dark textarea:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--card)) !important;
+    background-color: hsl(var(--background)) !important;
+    background-image: none !important;
+    color: hsl(var(--foreground)) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+
+  /* Force remove any yellow/orange backgrounds */
+  input,
+  select,
+  textarea {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Additional fixes for specific input types and browsers */
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  input[type="tel"] {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    background-image: none !important;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    background-image: none !important;
   }
 }
