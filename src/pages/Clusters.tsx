@@ -17,6 +17,12 @@ const Clusters = () => {
   const [selectedType, setSelectedType] = useState('all');
   const [activeTab, setActiveTab] = useState('created');
 
+  // Reset filters when changing tabs - HOOK MOVED TO TOP
+  useEffect(() => {
+    setSelectedCluster('all');
+    setSelectedType('all');
+  }, [activeTab]);
+
   if (!profile?.can_view_clusters) {
     return (
       <div className="p-6">
@@ -66,12 +72,6 @@ const Clusters = () => {
     setSelectedCluster('all');
     setSelectedType('all');
   };
-
-  // Reset filters when changing tabs
-  useEffect(() => {
-    setSelectedCluster('all');
-    setSelectedType('all');
-  }, [activeTab]);
 
   return (
     <div className="p-6 space-y-6">
