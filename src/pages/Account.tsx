@@ -135,8 +135,7 @@ const Account = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="space-y-6">
+    <div className="p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Configurações da Conta</h1>
           <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
@@ -345,9 +344,8 @@ const Account = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
         </div>
-      </div>
+    </div>
     </div>
   );
 };

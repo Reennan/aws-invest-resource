@@ -11,6 +11,7 @@ interface ResourceFiltersProps {
   onTypeChange: (value: string) => void;
   onClearFilters: () => void;
   clusters: { id: string; name: string }[];
+  hideClusterFilter?: boolean;
 }
 
 const resourceTypes = [
@@ -31,9 +32,10 @@ export const ResourceFilters = ({
   onClusterChange,
   onTypeChange,
   onClearFilters,
-  clusters
+  clusters,
+  hideClusterFilter = false
 }: ResourceFiltersProps) => {
-  const hasActiveFilters = selectedCluster !== 'all' || selectedType !== 'all';
+  const hasActiveFilters = (!hideClusterFilter && selectedCluster !== 'all') || selectedType !== 'all';
 
   return (
     <Card className="mb-6">
@@ -57,23 +59,25 @@ export const ResourceFilters = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Cluster</label>
-            <Select value={selectedCluster} onValueChange={onClusterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um cluster" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Clusters</SelectItem>
-                {clusters.map((cluster) => (
-                  <SelectItem key={cluster.id} value={cluster.id}>
-                    {cluster.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={`grid gap-4 ${hideClusterFilter ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+          {!hideClusterFilter && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cluster</label>
+              <Select value={selectedCluster} onValueChange={onClusterChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cluster" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Clusters</SelectItem>
+                  {clusters.map((cluster) => (
+                    <SelectItem key={cluster.id} value={cluster.id}>
+                      {cluster.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Tipo de Recurso</label>
