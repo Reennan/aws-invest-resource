@@ -9,6 +9,7 @@ import { BarChart3, TrendingUp, AlertTriangle, Calendar } from 'lucide-react';
 import { ReportsFilters } from '@/components/ReportsFilters';
 import { PaginatedResourceTable } from '@/components/PaginatedResourceTable';
 import { useToast } from '@/hooks/use-toast';
+import { exportToCSV, exportToExcel } from '@/lib/exportUtils';
 
 const Reports = () => {
   const { profile } = useAuth();
@@ -94,10 +95,8 @@ const Reports = () => {
       }, {} as Record<string, string>);
 
       if (format === 'csv') {
-        const { exportToCSV } = require('@/lib/exportUtils');
         exportToCSV(filteredResources.created, filteredResources.unused, clustersMap);
       } else if (format === 'xlsx') {
-        const { exportToExcel } = require('@/lib/exportUtils');
         exportToExcel(filteredResources.created, filteredResources.unused, clustersMap);
       }
 

@@ -4,25 +4,30 @@ import { ptBR } from 'date-fns/locale';
 
 interface ResourceCreated {
   id: string;
+  cluster_id: string;
+  run_id: string;
   name: string;
   type: string;
-  cluster_id: string;
   account_name: string;
-  created_at: string;
-  manage_status: string;
   console_link: string;
+  manage_status: string;
+  created_at: string;
+  raw: any;
 }
 
 interface ResourceUnused {
   id: string;
+  cluster_id: string;
+  run_id: string;
   name: string;
   type: string;
-  cluster_id: string;
+  resource_id: string;
   account_name: string;
-  days_without_use: number;
-  total_requests: number;
-  status: string;
   console_link: string;
+  status: string;
+  days_without_use: number;
+  raw: any;
+  metrics: any;
 }
 
 export const exportToCSV = (
@@ -48,7 +53,6 @@ export const exportToCSV = (
     'Cluster': clustersMap[resource.cluster_id] || '',
     'Conta': resource.account_name || '',
     'Dias sem Uso': resource.days_without_use || 0,
-    'Total de Requisições': resource.total_requests || 0,
     'Status': resource.status || '',
     'Link do Console': resource.console_link || ''
   }));
@@ -60,8 +64,8 @@ export const exportToCSV = (
   // Criar arquivo combinado
   const combinedCSV = `RECURSOS CRIADOS\n${csvCreated}\n\nRECURSOS SEM USO\n${csvUnused}`;
 
-  // Download
-  downloadFile(combinedCSV, 'relatorio-recursos.csv', 'text/csv');
+  // Download com BOM para melhor compatibilidade
+  downloadFile(combinedCSV, 'relatorio-recursos.csv', 'text/csv;charset=utf-8');
 };
 
 export const exportToExcel = (
@@ -87,7 +91,6 @@ export const exportToExcel = (
     'Cluster': clustersMap[resource.cluster_id] || '',
     'Conta': resource.account_name || '',
     'Dias sem Uso': resource.days_without_use || 0,
-    'Total de Requisições': resource.total_requests || 0,
     'Status': resource.status || '',
     'Link do Console': resource.console_link || ''
   }));
@@ -129,7 +132,11 @@ const convertToCSV = (data: any[]): string => {
 };
 
 const downloadFile = (content: string, filename: string, mimeType: string) => {
-  const blob = new Blob([content], { type: mimeType });
+  // Adicionar BOM para CSVs para melhor compatibilidade com caracteres especiais
+  const BOM = '\uFEFF';
+  const contentWithBOM = mimeType.includes('csv') ? BOM + content : content;
+  
+  const blob = new Blob([contentWithBOM], { type: mimeType });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
