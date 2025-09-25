@@ -9,7 +9,7 @@ interface UserProfile {
   name: string | null;
   email: string;
   phone: string | null;
-  role: 'viewer' | 'admin';
+  role: 'viewer' | 'admin' | 'editor';
   last_login: string | null;
   created_at: string;
   is_active: boolean;

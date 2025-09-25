@@ -8,7 +8,7 @@ interface User {
   name: string | null;
   email: string;
   phone: string | null;
-  role: 'viewer' | 'admin';
+  role: 'viewer' | 'admin' | 'editor';
   last_login: string | null;
   created_at: string;
   is_active: boolean;
@@ -51,7 +51,7 @@ export const useUsers = () => {
     }
   };
 
-  const updateUserRole = async (userId: string, role: 'viewer' | 'admin') => {
+  const updateUserRole = async (userId: string, role: 'viewer' | 'admin' | 'editor') => {
     try {
       const { error } = await supabase
         .from('users_profile')

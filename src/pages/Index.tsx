@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardStats from '@/components/DashboardStats';
+import { DashboardCharts } from '@/components/DashboardCharts';
+import { LatestExecutions } from '@/components/LatestExecutions';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Cloud } from 'lucide-react';
 
@@ -61,6 +63,12 @@ const Index = () => {
 
       {/* Dashboard Stats */}
       <DashboardStats key={refreshing ? 'refreshing' : 'normal'} />
+
+      {/* Charts */}
+      <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
+
+      {/* Latest Executions */}
+      <LatestExecutions refreshTrigger={refreshing ? Date.now() : 0} />
 
         {/* Welcome Message for new users */}
         {(!profile.can_view_clusters && !profile.can_view_reports) && (
