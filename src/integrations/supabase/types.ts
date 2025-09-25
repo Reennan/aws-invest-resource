@@ -363,44 +363,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      upsert_resource_created: {
-        Args: {
-          p_account_name: string
-          p_cluster_id: string
-          p_console_link?: string
-          p_created_at?: string
-          p_manage_status?: string
-          p_name: string
-          p_raw?: Json
-          p_run_id: string
-          p_type: string
-        }
-        Returns: string
-      }
-      upsert_resource_unused: {
-        Args: {
-          p_account_name: string
-          p_cluster_id: string
-          p_console_link?: string
-          p_days_without_use?: number
-          p_empty_receives?: number
-          p_invocations?: number
-          p_messages_not_visible?: number
-          p_messages_received?: number
-          p_messages_sent?: number
-          p_method?: string
-          p_metrics?: Json
-          p_name: string
-          p_raw?: Json
-          p_resource_id: string
-          p_route?: string
-          p_run_id: string
-          p_status?: string
-          p_total_requests?: number
-          p_type: string
-        }
-        Returns: string
-      }
     }
     Enums: {
       user_role: "viewer" | "admin" | "editor"
