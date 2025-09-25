@@ -117,6 +117,39 @@ export const useUsers = () => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('users_profile')
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o usuário",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso",
+      });
+      
+      await fetchUsers();
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao excluir usuário",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -127,5 +160,6 @@ export const useUsers = () => {
     refetch: fetchUsers,
     updateUserRole,
     toggleUserStatus,
+    deleteUser,
   };
 };

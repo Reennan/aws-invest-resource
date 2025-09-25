@@ -21,13 +21,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Search, MoreVertical, UserCheck, UserX, Shield, Eye, Key, Edit } from 'lucide-react';
+import { Users, Search, MoreVertical, UserCheck, UserX, Shield, Eye, Key, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserClusterPermissions } from '@/components/UserClusterPermissions';
 
 const AdminUsers = () => {
   const { profile } = useAuth();
-  const { users, loading, updateUserRole, toggleUserStatus } = useUsers();
+  const { users, loading, updateUserRole, toggleUserStatus, deleteUser } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -100,6 +100,12 @@ const AdminUsers = () => {
 
   const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
     await toggleUserStatus(userId, !currentStatus);
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário "${userName}"? Esta ação não pode ser desfeita.`)) {
+      await deleteUser(userId);
+    }
   };
 
   const handleChangeUserPassword = async () => {
@@ -346,6 +352,13 @@ const AdminUsers = () => {
                         >
                           <Key className="mr-2 h-4 w-4" />
                           Alterar Senha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir Usuário
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
