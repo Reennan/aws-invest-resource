@@ -260,33 +260,19 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
                 ))}
               </div>
             ) : unusedByType.length > 0 ? (
-              <div className="space-y-3">
-                {unusedByType.slice(0, 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-destructive">
-                          {item.type?.substring(0, 2).toUpperCase() || 'UN'}
-                        </span>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type || 'unknown')}`}>
-                        {item.type || 'Desconhecido'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-lg font-semibold text-foreground">{item.total || 0}</span>
-                      <p className="text-xs text-muted-foreground">recursos</p>
-                    </div>
-                  </div>
-                ))}
-                {unusedByType.length > 5 && (
-                  <div className="text-center pt-2">
-                    <p className="text-xs text-muted-foreground">
-                      + {unusedByType.length - 5} tipos adicionais
-                    </p>
-                  </div>
-                )}
-              </div>
+              <PaginatedResourceTable 
+                resources={unusedByType.map(item => ({
+                  id: item.type || 'unknown',
+                  name: item.type || 'Desconhecido',
+                  type: item.type || 'unknown',
+                  account_name: `${item.total || 0} recursos`,
+                  cluster_id: '',
+                  days_without_use: item.total || 0,
+                  status: 'sem uso'
+                }))} 
+                type="unused" 
+                itemsPerPage={5}
+              />
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Nenhum recurso sem uso encontrado</p>
@@ -415,33 +401,19 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
                 ))}
               </div>
             ) : unusedByType.length > 0 ? (
-              <div className="space-y-3">
-                {unusedByType.slice(0, 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-destructive">
-                          {item.type?.substring(0, 2).toUpperCase() || 'UN'}
-                        </span>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type || 'unknown')}`}>
-                        {item.type || 'Desconhecido'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-lg font-semibold text-foreground">{item.total || 0}</span>
-                      <p className="text-xs text-muted-foreground">recursos</p>
-                    </div>
-                  </div>
-                ))}
-                {unusedByType.length > 5 && (
-                  <div className="text-center pt-2">
-                    <p className="text-xs text-muted-foreground">
-                      + {unusedByType.length - 5} tipos adicionais
-                    </p>
-                  </div>
-                )}
-              </div>
+              <PaginatedResourceTable 
+                resources={unusedByType.map(item => ({
+                  id: item.type || 'unknown',
+                  name: item.type || 'Desconhecido',
+                  type: item.type || 'unknown',
+                  account_name: `${item.total || 0} recursos`,
+                  cluster_id: '',
+                  days_without_use: item.total || 0,
+                  status: 'sem uso'
+                }))} 
+                type="unused" 
+                itemsPerPage={5}
+              />
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Nenhum recurso sem uso encontrado</p>

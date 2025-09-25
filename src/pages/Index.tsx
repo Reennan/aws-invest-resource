@@ -41,7 +41,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6 md:p-8 pt-2">
+    <div className="flex-1 space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
