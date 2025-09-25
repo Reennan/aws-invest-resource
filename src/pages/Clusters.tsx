@@ -77,7 +77,7 @@ const Clusters = () => {
   // Se nenhum cluster selecionado, mostra lista de clusters
   if (!selectedCluster) {
     return (
-      <div className="p-6 pt-6 space-y-6">
+      <div className="p-6 pt-2 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Clusters</h1>
           <p className="text-muted-foreground">Selecione um cluster para visualizar seus recursos</p>
@@ -134,7 +134,7 @@ const Clusters = () => {
 
   // Se cluster selecionado, mostra recursos do cluster
   return (
-    <div className="p-6 pt-6 space-y-6">
+    <div className="p-6 pt-2 space-y-6">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 

@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Activity, Database, AlertTriangle, CheckCircle, TrendingUp, Users, ExternalLink } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { PaginatedResourceTable } from '@/components/PaginatedResourceTable';
 import { useRealtime } from '@/hooks/useRealtime';
-import { Server, Plus, AlertTriangle, Activity, RefreshCw } from 'lucide-react';
+import { Server, Plus, RefreshCw } from 'lucide-react';
 
 interface DashboardStatsProps {
   statsOnly?: boolean;
@@ -24,6 +28,7 @@ interface RecentResource {
   created_at: string;
   console_link: string;
   account_name: string;
+  cluster_id: string;
 }
 
 interface UnusedByType {
@@ -36,6 +41,8 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
   const [recentResources, setRecentResources] = useState<RecentResource[]>([]);
   const [unusedByType, setUnusedByType] = useState<UnusedByType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingResources, setLoadingResources] = useState(false);
+  const [loadingUnusedTypes, setLoadingUnusedTypes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
@@ -55,9 +62,10 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
       }
 
       // Fetch recent resources (last 10)
+      setLoadingResources(true);
       const { data: recentData, error: recentError } = await supabase
         .from('resources_created')
-        .select('id, name, type, created_at, console_link, account_name')
+        .select('id, name, type, created_at, console_link, account_name, cluster_id')
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -66,8 +74,10 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
       } else {
         setRecentResources(recentData || []);
       }
+      setLoadingResources(false);
 
       // Fetch unused by type
+      setLoadingUnusedTypes(true);
       const { data: unusedData, error: unusedError } = await supabase
         .from('v_unused_by_type')
         .select('*')
@@ -79,6 +89,7 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
       } else {
         setUnusedByType(unusedData || []);
       }
+      setLoadingUnusedTypes(false);
 
     } catch (error) {
       console.error('Error in fetchDashboardData:', error);
@@ -206,42 +217,29 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
             <CardTitle className="text-lg font-semibold">Criados Recentemente</CardTitle>
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${refreshing ? 'animate-spin' : ''}`} />
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentResources.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum recurso recente encontrado
-              </p>
-            ) : (
-              recentResources.slice(0, 5).map((resource) => (
-                <div key={resource.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{resource.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={getTypeColor(resource.type)} variant="secondary">
-                        {resource.type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {resource.account_name}
-                      </span>
+          <CardContent>
+            {loadingResources ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                    <div className="space-y-1 flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                      <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(resource.created_at).toLocaleDateString()}
-                    </p>
-                    {resource.console_link && (
-                      <a
-                        href={resource.console_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Console AWS →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
+            ) : recentResources.length > 0 ? (
+              <PaginatedResourceTable 
+                resources={recentResources} 
+                type="created" 
+                itemsPerPage={5}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum recurso criado recentemente</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -251,25 +249,48 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Sem Uso por Tipo</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {unusedByType.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum recurso sem uso encontrado
-              </p>
+          <CardContent>
+            {loadingUnusedTypes ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            ) : unusedByType.length > 0 ? (
+              <div className="space-y-3">
+                {unusedByType.slice(0, 5).map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-destructive">
+                          {item.type?.substring(0, 2).toUpperCase() || 'UN'}
+                        </span>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type || 'unknown')}`}>
+                        {item.type || 'Desconhecido'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-foreground">{item.total || 0}</span>
+                      <p className="text-xs text-muted-foreground">recursos</p>
+                    </div>
+                  </div>
+                ))}
+                {unusedByType.length > 5 && (
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      + {unusedByType.length - 5} tipos adicionais
+                    </p>
+                  </div>
+                )}
+              </div>
             ) : (
-              unusedByType.map((item) => (
-                <div key={item.type} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge className={getTypeColor(item.type)} variant="secondary">
-                      {item.type}
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold text-slate-600">{item.total}</span>
-                    <p className="text-xs text-muted-foreground">recursos</p>
-                  </div>
-                </div>
-              ))
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum recurso sem uso encontrado</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -351,42 +372,29 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
             <CardTitle className="text-lg font-semibold">Criados Recentemente</CardTitle>
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${refreshing ? 'animate-spin' : ''}`} />
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentResources.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum recurso recente encontrado
-              </p>
-            ) : (
-              recentResources.slice(0, 5).map((resource) => (
-                <div key={resource.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{resource.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={getTypeColor(resource.type)} variant="secondary">
-                        {resource.type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {resource.account_name}
-                      </span>
+          <CardContent>
+            {loadingResources ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                    <div className="space-y-1 flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                      <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(resource.created_at).toLocaleDateString()}
-                    </p>
-                    {resource.console_link && (
-                      <a
-                        href={resource.console_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Console AWS →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
+            ) : recentResources.length > 0 ? (
+              <PaginatedResourceTable 
+                resources={recentResources} 
+                type="created" 
+                itemsPerPage={5}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum recurso criado recentemente</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -396,25 +404,48 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Sem Uso por Tipo</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {unusedByType.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum recurso sem uso encontrado
-              </p>
+          <CardContent>
+            {loadingUnusedTypes ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            ) : unusedByType.length > 0 ? (
+              <div className="space-y-3">
+                {unusedByType.slice(0, 5).map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-destructive">
+                          {item.type?.substring(0, 2).toUpperCase() || 'UN'}
+                        </span>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type || 'unknown')}`}>
+                        {item.type || 'Desconhecido'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-foreground">{item.total || 0}</span>
+                      <p className="text-xs text-muted-foreground">recursos</p>
+                    </div>
+                  </div>
+                ))}
+                {unusedByType.length > 5 && (
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      + {unusedByType.length - 5} tipos adicionais
+                    </p>
+                  </div>
+                )}
+              </div>
             ) : (
-              unusedByType.map((item) => (
-                <div key={item.type} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge className={getTypeColor(item.type)} variant="secondary">
-                      {item.type}
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold text-slate-600">{item.total}</span>
-                    <p className="text-xs text-muted-foreground">recursos</p>
-                  </div>
-                </div>
-              ))
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum recurso sem uso encontrado</p>
+              </div>
             )}
           </CardContent>
         </Card>

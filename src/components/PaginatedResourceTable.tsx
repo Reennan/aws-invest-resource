@@ -1,18 +1,9 @@
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious,
-  PaginationEllipsis
-} from '@/components/ui/pagination';
-import { ExternalLink, Clock } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Resource {
   id: string;
@@ -21,7 +12,7 @@ interface Resource {
   account_name: string;
   console_link?: string;
   created_at?: string;
-  manage_status?: string;
+  cluster_id: string;
   days_without_use?: number;
   status?: string;
 }
@@ -29,9 +20,28 @@ interface Resource {
 interface PaginatedResourceTableProps {
   resources: Resource[];
   type: 'created' | 'unused';
+  itemsPerPage?: number;
 }
 
-export const PaginatedResourceTable = ({ resources, type }: PaginatedResourceTableProps) => {
+const getTypeColor = (type: string) => {
+  const colors: { [key: string]: string } = {
+    'ec2': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    's3': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    'rds': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+    'lambda': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+    'elb': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300',
+    'cloudformation': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
+    default: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+  };
+  
+  return colors[type.toLowerCase()] || colors.default;
+};
+
+export const PaginatedResourceTable = ({ 
+  resources, 
+  type, 
+  itemsPerPage = 5 
+}: PaginatedResourceTableProps) => {
   const {
     currentData,
     currentPage,
@@ -41,177 +51,125 @@ export const PaginatedResourceTable = ({ resources, type }: PaginatedResourceTab
     goToPreviousPage,
     hasNextPage,
     hasPreviousPage,
-    startIndex,
-    endIndex,
     totalItems,
-  } = usePagination({ data: resources, itemsPerPage: 10 });
-
-  const getTypeColor = (resourceType: string) => {
-    const colors: { [key: string]: string } = {
-      'ec2': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-      'lambda': 'bg-orange-500/10 text-orange-600 border-orange-500/20',
-      'rds': 'bg-green-500/10 text-green-600 border-green-500/20',
-      's3': 'bg-purple-500/10 text-purple-600 border-purple-500/20',
-      'elb': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-      'cloudformation': 'bg-pink-500/10 text-pink-600 border-pink-500/20',
-      'ecs': 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
-      'vpc': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
-    };
-    return colors[resourceType] || 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-  };
-
-  const getPaginationNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-    
-    return pages;
-  };
+    startIndex,
+    endIndex
+  } = usePagination({ data: resources, itemsPerPage });
 
   if (resources.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        {type === 'created' ? 'Nenhum recurso criado encontrado' : 'Nenhum recurso sem uso encontrado'}
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">
+          {type === 'created' ? 'Nenhum recurso criado' : 'Nenhum recurso sem uso'}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Informações da paginação */}
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>
-          Mostrando {startIndex} a {endIndex} de {totalItems} recursos
-        </span>
-        <span>
-          Página {currentPage} de {totalPages}
-        </span>
+      {/* Resources List */}
+      <div className="space-y-3">
+        {currentData.map((resource) => (
+          <div key={resource.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30 hover:bg-muted/50 transition-colors">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className={`h-8 w-8 rounded-lg ${type === 'created' ? 'bg-primary/10' : 'bg-destructive/10'} flex items-center justify-center flex-shrink-0`}>
+                <span className={`text-xs font-semibold ${type === 'created' ? 'text-primary' : 'text-destructive'}`}>
+                  {resource.type.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {resource.name}
+                  </p>
+                  {resource.console_link && (
+                    <a
+                      href={resource.console_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(resource.type)}`}>
+                    {resource.type}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {resource.account_name}
+                  </span>
+                  {type === 'unused' && resource.status && (
+                    <span className="text-xs text-muted-foreground">
+                      • {resource.status}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              {type === 'created' ? (
+                <p className="text-xs text-muted-foreground">
+                  {resource.created_at ? format(new Date(resource.created_at), 'dd/MM/yyyy', { locale: ptBR }) : '-'}
+                </p>
+              ) : (
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-destructive">
+                    {resource.days_without_use || 0} dias
+                  </p>
+                  <p className="text-xs text-muted-foreground">sem uso</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Tabela */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Conta</TableHead>
-            {type === 'created' && (
-              <>
-                <TableHead>Status</TableHead>
-                <TableHead>Criado</TableHead>
-              </>
-            )}
-            {type === 'unused' && (
-              <>
-                <TableHead>Dias sem Uso</TableHead>
-                <TableHead>Status</TableHead>
-              </>
-            )}
-            <TableHead>Console</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {currentData.map((resource) => (
-            <TableRow key={resource.id}>
-              <TableCell className="font-medium">{resource.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline" className={getTypeColor(resource.type)}>
-                  {resource.type.toUpperCase()}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {resource.account_name}
-              </TableCell>
-              
-              {type === 'created' && (
-                <>
-                  <TableCell>
-                    <Badge variant={resource.manage_status === 'active' ? 'default' : 'secondary'}>
-                      {resource.manage_status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {resource.created_at ? new Date(resource.created_at).toLocaleDateString('pt-BR') : '-'}
-                  </TableCell>
-                </>
-              )}
-              
-              {type === 'unused' && (
-                <>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-warning" />
-                      <span className="font-medium">{resource.days_without_use || 0} dias</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="destructive">{resource.status}</Badge>
-                  </TableCell>
-                </>
-              )}
-              
-              <TableCell>
-                {resource.console_link && (
-                  <Button size="sm" variant="ghost" asChild>
-                    <a href={resource.console_link} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {/* Controles de paginação */}
+      {/* Pagination Controls */}
       {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={goToPreviousPage}
-                className={hasPreviousPage ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
-              />
-            </PaginationItem>
+        <div className="flex items-center justify-between pt-4 border-t border-border/30">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {startIndex} - {endIndex} de {totalItems} recursos
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={!hasPreviousPage}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
             
-            {getPaginationNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {page === '...' ? (
-                  <PaginationEllipsis />
-                ) : (
-                  <PaginationLink
-                    onClick={() => goToPage(page as number)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
-              </PaginationItem>
-            ))}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => goToPage(page)}
+                  className="h-8 w-8 p-0 text-xs"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
             
-            <PaginationItem>
-              <PaginationNext 
-                onClick={goToNextPage}
-                className={hasNextPage ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={!hasNextPage}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
