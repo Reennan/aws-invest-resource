@@ -115,7 +115,7 @@ const Reports = () => {
   }, {} as Record<string, number>);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 pt-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Relatórios</h1>
         <p className="text-muted-foreground">Análise detalhada e exportação de recursos AWS</p>

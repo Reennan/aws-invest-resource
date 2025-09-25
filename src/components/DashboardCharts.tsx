@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar1 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -36,14 +35,14 @@ const CHART_COLORS = [
 ];
 
 export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
-  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 7));
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [periodDays, setPeriodDays] = useState<number>(7);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [pieData, setPieData] = useState<PieData[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchChartData = async () => {
-    if (!startDate || !endDate) return;
+    const startDate = subDays(new Date(), periodDays);
+    const endDate = new Date();
     
     setLoading(true);
     try {
@@ -129,7 +128,7 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
 
   useEffect(() => {
     fetchChartData();
-  }, [startDate, endDate, refreshTrigger]);
+  }, [periodDays, refreshTrigger]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -138,41 +137,20 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-xl font-semibold">
             Recursos por Dia
-            <div className="flex space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data inicial'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data final'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="flex items-center gap-2">
+              <Calendar1 className="h-4 w-4 text-muted-foreground" />
+              <Select value={periodDays.toString()} onValueChange={(value) => setPeriodDays(Number(value))}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="15">Últimos 15 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="60">Últimos 60 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardTitle>
         </CardHeader>
@@ -228,24 +206,23 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="h-[400px] flex items-center justify-center">
+            <div className="h-[480px] flex items-center justify-center">
               <div className="text-muted-foreground">Carregando...</div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={480}>
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percentage }) => `${name}: ${percentage}%`}
-                  outerRadius={120}
-                  innerRadius={60}
+                  outerRadius={140}
+                  innerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                   stroke="hsl(var(--background))"
-                  strokeWidth={2}
+                  strokeWidth={3}
                 >
                   {pieData.map((entry, index) => (
                     <Cell 
@@ -255,7 +232,7 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value, name) => [value, name]}
+                  formatter={(value, name) => [`${value} recursos`, name]}
                   contentStyle={{
                     backgroundColor: 'hsl(var(--popover))',
                     border: '1px solid hsl(var(--border))',
@@ -263,11 +240,27 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
                     boxShadow: 'var(--shadow-medium)'
                   }}
                 />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={60}
+                  formatter={(value, entry) => {
+                    const item = pieData.find(d => d.name === value);
+                    return (
+                      <span style={{ color: entry.color }}>
+                        {value}: {item?.value} ({item?.percentage}%)
+                      </span>
+                    );
+                  }}
+                  wrapperStyle={{
+                    paddingTop: '20px',
+                    fontSize: '14px'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
           {!loading && pieData.length === 0 && (
-            <div className="h-[400px] flex items-center justify-center">
+            <div className="h-[480px] flex items-center justify-center">
               <div className="text-muted-foreground">Nenhum dado disponível</div>
             </div>
           )}

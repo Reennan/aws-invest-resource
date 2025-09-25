@@ -5,6 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { useRealtime } from '@/hooks/useRealtime';
 import { Server, Plus, AlertTriangle, Activity, RefreshCw } from 'lucide-react';
 
+interface DashboardStatsProps {
+  statsOnly?: boolean;
+  sectionsOnly?: boolean;
+}
+
 interface DashboardTotals {
   generated_at: string;
   clusters_disponiveis: number;
@@ -26,7 +31,7 @@ interface UnusedByType {
   total: number;
 }
 
-const DashboardStats = () => {
+const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardStatsProps = {}) => {
   const [totals, setTotals] = useState<DashboardTotals | null>(null);
   const [recentResources, setRecentResources] = useState<RecentResource[]>([]);
   const [unusedByType, setUnusedByType] = useState<UnusedByType[]>([]);
@@ -122,6 +127,155 @@ const DashboardStats = () => {
     };
     return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   };
+
+  // Return only main stats if statsOnly is true
+  if (statsOnly) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="shadow-medium border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Clusters Ativos</CardTitle>
+            <Server className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totals?.clusters_disponiveis || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Clusters de contas AWS
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recursos Criados</CardTitle>
+            <Plus className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">
+              {totals?.recursos_criados_periodo || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Últimos 30 dias
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recursos Sem Uso</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-slate-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-600">
+              {totals?.recursos_sem_uso_periodo || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Precisam de atenção
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Status Tempo Real</CardTitle>
+            <Activity className={`h-4 w-4 ${connected ? 'text-success' : 'text-muted-foreground'}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${connected ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
+              <span className="text-sm font-medium">
+                {connected ? 'Conectado' : 'Desconectado'}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {lastUpdate ? `Atualizado ${lastUpdate.toLocaleTimeString()}` : 'Nenhuma atualização ainda'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Return only sections if sectionsOnly is true
+  if (sectionsOnly) {
+    return (
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Resources */}
+        <Card className="shadow-medium border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg font-semibold">Criados Recentemente</CardTitle>
+            <RefreshCw className={`h-4 w-4 text-muted-foreground ${refreshing ? 'animate-spin' : ''}`} />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentResources.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum recurso recente encontrado
+              </p>
+            ) : (
+              recentResources.slice(0, 5).map((resource) => (
+                <div key={resource.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{resource.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className={getTypeColor(resource.type)} variant="secondary">
+                        {resource.type}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {resource.account_name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(resource.created_at).toLocaleDateString()}
+                    </p>
+                    {resource.console_link && (
+                      <a
+                        href={resource.console_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Console AWS →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Unused by Type */}
+        <Card className="shadow-medium border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Sem Uso por Tipo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {unusedByType.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum recurso sem uso encontrado
+              </p>
+            ) : (
+              unusedByType.map((item) => (
+                <div key={item.type} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Badge className={getTypeColor(item.type)} variant="secondary">
+                      {item.type}
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold text-slate-600">{item.total}</span>
+                    <p className="text-xs text-muted-foreground">recursos</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

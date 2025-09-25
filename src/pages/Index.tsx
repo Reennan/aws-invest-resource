@@ -41,7 +41,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6 md:p-8">
+    <div className="flex-1 space-y-6 p-6 md:p-8 pt-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -61,13 +61,16 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Dashboard Stats */}
-      <DashboardStats key={refreshing ? 'refreshing' : 'normal'} />
+      {/* 1ª Fileira: Dashboard Stats */}
+      <DashboardStats key={refreshing ? 'refreshing' : 'normal'} statsOnly />
 
-      {/* Charts */}
+      {/* 2ª Fileira: Charts */}
       <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
 
-      {/* Latest Executions */}
+      {/* 3ª Fileira: Recent Resources and Unused Types */}
+      <DashboardStats key={`${refreshing ? 'refreshing' : 'normal'}-sections`} sectionsOnly />
+
+      {/* 4ª Fileira: Latest Executions */}
       <LatestExecutions refreshTrigger={refreshing ? Date.now() : 0} />
 
         {/* Welcome Message for new users */}
