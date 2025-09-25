@@ -17,8 +17,8 @@ const Reports = () => {
   const { toast } = useToast();
   
   // Estados dos filtros
-  const [selectedCluster, setSelectedCluster] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
+  const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
@@ -49,15 +49,15 @@ const Reports = () => {
     let unused = [...unusedResources];
 
     // Filtro por cluster
-    if (selectedCluster !== 'all') {
-      created = created.filter(r => r.cluster_id === selectedCluster);
-      unused = unused.filter(r => r.cluster_id === selectedCluster);
+    if (selectedClusters.length > 0) {
+      created = created.filter(r => selectedClusters.includes(r.cluster_id));
+      unused = unused.filter(r => selectedClusters.includes(r.cluster_id));
     }
 
     // Filtro por tipo
-    if (selectedType !== 'all') {
-      created = created.filter(r => r.type === selectedType);
-      unused = unused.filter(r => r.type === selectedType);
+    if (selectedTypes.length > 0) {
+      created = created.filter(r => selectedTypes.includes(r.type));
+      unused = unused.filter(r => selectedTypes.includes(r.type));
     }
 
     // Filtro por data
@@ -79,8 +79,8 @@ const Reports = () => {
   const unusedPercentage = totalResources > 0 ? ((totalUnused / totalResources) * 100).toFixed(1) : '0';
 
   const handleClearFilters = () => {
-    setSelectedCluster('all');
-    setSelectedType('all');
+    setSelectedClusters([]);
+    setSelectedTypes([]);
     setStartDate(undefined);
     setEndDate(undefined);
   };
@@ -94,8 +94,8 @@ const Reports = () => {
     
     // Aqui seria implementada a lógica de exportação real
     console.log('Exporting report:', format, {
-      selectedCluster,
-      selectedType,
+      selectedClusters,
+      selectedTypes,
       startDate,
       endDate,
       filteredResources
@@ -170,12 +170,12 @@ const Reports = () => {
 
       {/* Filtros */}
       <ReportsFilters
-        selectedCluster={selectedCluster}
-        selectedType={selectedType}
+        selectedClusters={selectedClusters}
+        selectedTypes={selectedTypes}
         startDate={startDate}
         endDate={endDate}
-        onClusterChange={setSelectedCluster}
-        onTypeChange={setSelectedType}
+        onClustersChange={setSelectedClusters}
+        onTypesChange={setSelectedTypes}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
         onClearFilters={handleClearFilters}

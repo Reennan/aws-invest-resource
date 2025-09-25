@@ -6,18 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Filter, X, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface ReportsFiltersProps {
-  selectedCluster: string;
-  selectedType: string;
+  selectedClusters: string[];
+  selectedTypes: string[];
   startDate: Date | undefined;
   endDate: Date | undefined;
-  onClusterChange: (value: string) => void;
-  onTypeChange: (value: string) => void;
+  onClustersChange: (values: string[]) => void;
+  onTypesChange: (values: string[]) => void;
   onStartDateChange: (date: Date | undefined) => void;
   onEndDateChange: (date: Date | undefined) => void;
   onClearFilters: () => void;
@@ -38,19 +39,19 @@ const resourceTypes = [
 ];
 
 export const ReportsFilters = ({
-  selectedCluster,
-  selectedType,
+  selectedClusters,
+  selectedTypes,
   startDate,
   endDate,
-  onClusterChange,
-  onTypeChange,
+  onClustersChange,
+  onTypesChange,
   onStartDateChange,
   onEndDateChange,
   onClearFilters,
   onExportReport,
   clusters
 }: ReportsFiltersProps) => {
-  const hasActiveFilters = selectedCluster !== 'all' || selectedType !== 'all' || startDate || endDate;
+  const hasActiveFilters = selectedClusters.length > 0 || selectedTypes.length > 0 || startDate || endDate;
 
   return (
     <Card className="mb-6">
@@ -106,37 +107,92 @@ export const ReportsFilters = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Filtro por Cluster */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Cluster</Label>
-            <Select value={selectedCluster} onValueChange={onClusterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um cluster" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Clusters</SelectItem>
-                {clusters.map((cluster) => (
-                  <SelectItem key={cluster.id} value={cluster.id}>
-                    {cluster.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-sm font-medium">Clusters</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {selectedClusters.length === 0
+                    ? "Selecione clusters"
+                    : selectedClusters.length === 1
+                    ? clusters.find(c => c.id === selectedClusters[0])?.name
+                    : `${selectedClusters.length} clusters selecionados`
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <div className="p-4 space-y-2">
+                  {clusters.map((cluster) => (
+                    <div key={cluster.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={cluster.id}
+                        checked={selectedClusters.includes(cluster.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            onClustersChange([...selectedClusters, cluster.id]);
+                          } else {
+                            onClustersChange(selectedClusters.filter(id => id !== cluster.id));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={cluster.id}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {cluster.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Filtro por Tipo */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Tipo de Recurso</Label>
-            <Select value={selectedType} onValueChange={onTypeChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                {resourceTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-sm font-medium">Tipos de Recurso</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {selectedTypes.length === 0
+                    ? "Selecione tipos"
+                    : selectedTypes.length === 1
+                    ? resourceTypes.find(t => t.value === selectedTypes[0])?.label
+                    : `${selectedTypes.length} tipos selecionados`
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <div className="p-4 space-y-2">
+                  {resourceTypes.filter(type => type.value !== 'all').map((type) => (
+                    <div key={type.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={type.value}
+                        checked={selectedTypes.includes(type.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            onTypesChange([...selectedTypes, type.value]);
+                          } else {
+                            onTypesChange(selectedTypes.filter(t => t !== type.value));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={type.value}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {type.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Data de Início */}
