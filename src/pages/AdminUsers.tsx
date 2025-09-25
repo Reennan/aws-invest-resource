@@ -21,9 +21,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Search, MoreVertical, UserCheck, UserX, Shield, Eye, Key } from 'lucide-react';
+import { Users, Search, MoreVertical, UserCheck, UserX, Shield, Eye, Key, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { UserClusterPermissions } from '@/components/UserClusterPermissions';
 
 const AdminUsers = () => {
   const { profile } = useAuth();
@@ -64,6 +64,7 @@ const AdminUsers = () => {
 
   const activeUsers = users.filter(u => u.is_active).length;
   const adminUsers = users.filter(u => u.role === 'admin').length;
+  const editorUsers = users.filter(u => u.role === 'editor').length;
   const viewerUsers = users.filter(u => u.role === 'viewer').length;
 
   const getInitials = (name: string | null) => {
@@ -72,14 +73,28 @@ const AdminUsers = () => {
   };
 
   const getRoleBadgeVariant = (role: string) => {
-    return role === 'admin' ? 'default' : 'secondary';
+    switch (role) {
+      case 'admin': return 'default';
+      case 'editor': return 'secondary';
+      case 'viewer': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Administrador';
+      case 'editor': return 'Editor';
+      case 'viewer': return 'Visualizador';
+      default: return role;
+    }
   };
 
   const getStatusBadgeVariant = (isActive: boolean) => {
     return isActive ? 'default' : 'destructive';
   };
 
-  const handleRoleChange = async (userId: string, newRole: 'viewer' | 'admin') => {
+  const handleRoleChange = async (userId: string, newRole: 'viewer' | 'admin' | 'editor') => {
     await updateUserRole(userId, newRole);
   };
 
@@ -184,6 +199,17 @@ const AdminUsers = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Editores</CardTitle>
+            <Edit className="h-4 w-4 text-secondary-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-secondary-foreground">{editorUsers}</div>
+            <p className="text-xs text-muted-foreground">Acesso intermediário</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Visualizadores</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -244,7 +270,7 @@ const AdminUsers = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(user.role)}>
-                      {user.role === 'admin' ? 'Administrador' : 'Visualizador'}
+                      {getRoleLabel(user.role)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -279,11 +305,36 @@ const AdminUsers = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'viewer' : 'admin')}
-                        >
-                          {user.role === 'admin' ? 'Tornar Visualizador' : 'Tornar Admin'}
-                        </DropdownMenuItem>
+                        {user.role === 'admin' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'editor')}>
+                              Tornar Editor
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'viewer')}>
+                              Tornar Visualizador
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {user.role === 'editor' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'admin')}>
+                              Tornar Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'viewer')}>
+                              Tornar Visualizador
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {user.role === 'viewer' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'admin')}>
+                              Tornar Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'editor')}>
+                              Tornar Editor
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => handleStatusToggle(user.id, user.is_active)}
                         >
@@ -295,6 +346,7 @@ const AdminUsers = () => {
                           <Key className="mr-2 h-4 w-4" />
                           Alterar Senha
                         </DropdownMenuItem>
+                        <UserClusterPermissions user={user} />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

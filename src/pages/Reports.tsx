@@ -1,17 +1,26 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useResources } from '@/hooks/useResources';
 import { useClusters } from '@/hooks/useClusters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, TrendingUp, AlertTriangle, Clock, Calendar, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BarChart3, TrendingUp, AlertTriangle, Calendar } from 'lucide-react';
+import { ReportsFilters } from '@/components/ReportsFilters';
+import { PaginatedResourceTable } from '@/components/PaginatedResourceTable';
+import { useToast } from '@/hooks/use-toast';
 
 const Reports = () => {
   const { profile } = useAuth();
   const { createdResources, unusedResources, loading } = useResources();
   const { clusters } = useClusters();
+  const { toast } = useToast();
+  
+  // Estados dos filtros
+  const [selectedCluster, setSelectedCluster] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   if (!profile?.can_view_reports) {
     return (
@@ -34,51 +43,82 @@ const Reports = () => {
     );
   }
 
-  // Estatísticas gerais
+  // Filtra recursos baseado nos filtros selecionados
+  const getFilteredResources = () => {
+    let created = [...createdResources];
+    let unused = [...unusedResources];
+
+    // Filtro por cluster
+    if (selectedCluster !== 'all') {
+      created = created.filter(r => r.cluster_id === selectedCluster);
+      unused = unused.filter(r => r.cluster_id === selectedCluster);
+    }
+
+    // Filtro por tipo
+    if (selectedType !== 'all') {
+      created = created.filter(r => r.type === selectedType);
+      unused = unused.filter(r => r.type === selectedType);
+    }
+
+    // Filtro por data
+    if (startDate) {
+      created = created.filter(r => r.created_at && new Date(r.created_at) >= startDate);
+    }
+    if (endDate) {
+      created = created.filter(r => r.created_at && new Date(r.created_at) <= endDate);
+    }
+
+    return { created, unused };
+  };
+
+  const filteredResources = getFilteredResources();
+
+  // Estatísticas gerais (sempre baseadas no total, não filtrado)
   const totalResources = createdResources.length;
   const totalUnused = unusedResources.length;
   const unusedPercentage = totalResources > 0 ? ((totalUnused / totalResources) * 100).toFixed(1) : '0';
 
-  // Recursos por tipo
-  const resourcesByType = createdResources.reduce((acc, resource) => {
+  const handleClearFilters = () => {
+    setSelectedCluster('all');
+    setSelectedType('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const handleExportReport = (format: 'csv' | 'xlsx') => {
+    // Simular exportação
+    toast({
+      title: "Exportação",
+      description: `Relatório ${format.toUpperCase()} será baixado em breve!`,
+    });
+    
+    // Aqui seria implementada a lógica de exportação real
+    console.log('Exporting report:', format, {
+      selectedCluster,
+      selectedType,
+      startDate,
+      endDate,
+      filteredResources
+    });
+  };
+
+  // Recursos por tipo (filtrados)
+  const resourcesByType = filteredResources.created.reduce((acc, resource) => {
     acc[resource.type] = (acc[resource.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  // Recursos sem uso por tipo
-  const unusedByType = unusedResources.reduce((acc, resource) => {
+  // Recursos sem uso por tipo (filtrados)
+  const unusedByType = filteredResources.unused.reduce((acc, resource) => {
     acc[resource.type] = (acc[resource.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-
-  // Recursos mais antigos sem uso
-  const oldestUnused = [...unusedResources]
-    .sort((a, b) => b.days_without_use - a.days_without_use)
-    .slice(0, 10);
-
-  // Clusters com mais recursos sem uso
-  const clusterStats = clusters.map(cluster => {
-    const clusterUnused = unusedResources.filter(r => r.cluster_id === cluster.id);
-    const clusterTotal = createdResources.filter(r => r.cluster_id === cluster.id);
-    return {
-      name: cluster.name,
-      unused: clusterUnused.length,
-      total: clusterTotal.length,
-      percentage: clusterTotal.length > 0 ? ((clusterUnused.length / clusterTotal.length) * 100).toFixed(1) : '0'
-    };
-  }).sort((a, b) => b.unused - a.unused);
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Relatórios</h1>
-          <p className="text-muted-foreground">Análise detalhada dos recursos AWS</p>
-        </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Exportar Relatório
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold">Relatórios</h1>
+        <p className="text-muted-foreground">Análise detalhada e exportação de recursos AWS</p>
       </div>
 
       {/* Cards de estatísticas */}
@@ -128,30 +168,53 @@ const Reports = () => {
         </Card>
       </div>
 
+      {/* Filtros */}
+      <ReportsFilters
+        selectedCluster={selectedCluster}
+        selectedType={selectedType}
+        startDate={startDate}
+        endDate={endDate}
+        onClusterChange={setSelectedCluster}
+        onTypeChange={setSelectedType}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onClearFilters={handleClearFilters}
+        onExportReport={handleExportReport}
+        clusters={clusters}
+      />
+
+      {/* Relatório com Abas */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="by-type">Por Tipo</TabsTrigger>
-          <TabsTrigger value="by-cluster">Por Cluster</TabsTrigger>
-          <TabsTrigger value="old-resources">Recursos Antigos</TabsTrigger>
+          <TabsTrigger value="resources">Recursos Detalhados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recursos por Tipo</CardTitle>
+                <CardTitle>Recursos Criados por Tipo</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {Object.keys(resourcesByType).length > 0 ? 'Baseado nos filtros aplicados' : 'Nenhum recurso encontrado'}
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(resourcesByType).map(([type, count]) => (
-                    <div key={type} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{type}</Badge>
+                  {Object.entries(resourcesByType).length > 0 ? (
+                    Object.entries(resourcesByType).map(([type, count]) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{type.toUpperCase()}</Badge>
+                        </div>
+                        <span className="font-medium">{count}</span>
                       </div>
-                      <span className="font-medium">{count}</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-center py-4 text-muted-foreground">
+                      Nenhum recurso criado encontrado com os filtros aplicados
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -159,98 +222,108 @@ const Reports = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Recursos Sem Uso por Tipo</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {Object.keys(unusedByType).length > 0 ? 'Baseado nos filtros aplicados' : 'Nenhum recurso sem uso encontrado'}
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(unusedByType).map(([type, count]) => (
-                    <div key={type} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="destructive">{type}</Badge>
+                  {Object.entries(unusedByType).length > 0 ? (
+                    Object.entries(unusedByType).map(([type, count]) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="destructive">{type.toUpperCase()}</Badge>
+                        </div>
+                        <span className="font-medium text-warning">{count}</span>
                       </div>
-                      <span className="font-medium text-warning">{count}</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-center py-4 text-muted-foreground">
+                      Nenhum recurso sem uso encontrado com os filtros aplicados
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="by-cluster" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Análise por Cluster</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cluster</TableHead>
-                    <TableHead>Total de Recursos</TableHead>
-                    <TableHead>Recursos Sem Uso</TableHead>
-                    <TableHead>Percentual</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clusterStats.map((cluster) => (
-                    <TableRow key={cluster.name}>
-                      <TableCell className="font-medium">{cluster.name}</TableCell>
-                      <TableCell>{cluster.total}</TableCell>
-                      <TableCell>
-                        <span className="text-warning font-medium">{cluster.unused}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={Number(cluster.percentage) > 20 ? 'destructive' : 'secondary'}>
-                          {cluster.percentage}%
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="old-resources" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recursos com Maior Tempo Sem Uso</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Conta</TableHead>
-                    <TableHead>Dias sem Uso</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {oldestUnused.map((resource) => (
-                    <TableRow key={resource.id}>
-                      <TableCell className="font-medium">{resource.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{resource.type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{resource.account_name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-warning" />
-                          <span className="font-medium text-warning">{resource.days_without_use} dias</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">{resource.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="resources" className="space-y-6">
+          <Tabs defaultValue="created" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="created">Recursos Criados</TabsTrigger>
+              <TabsTrigger value="unused">Recursos Sem Uso</TabsTrigger>
+              <TabsTrigger value="all">Todos os Recursos</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="created">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recursos Criados</CardTitle>
+                  <p className="text-muted-foreground">
+                    {filteredResources.created.length} recursos encontrados
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <PaginatedResourceTable 
+                    resources={filteredResources.created}
+                    type="created"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="unused">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recursos Sem Uso</CardTitle>
+                  <p className="text-muted-foreground">
+                    {filteredResources.unused.length} recursos encontrados
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <PaginatedResourceTable 
+                    resources={filteredResources.unused}
+                    type="unused"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="all">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recursos Criados</CardTitle>
+                    <p className="text-muted-foreground">
+                      {filteredResources.created.length} recursos encontrados
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <PaginatedResourceTable 
+                      resources={filteredResources.created}
+                      type="created"
+                    />
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recursos Sem Uso</CardTitle>
+                    <p className="text-muted-foreground">
+                      {filteredResources.unused.length} recursos encontrados
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <PaginatedResourceTable 
+                      resources={filteredResources.unused}
+                      type="unused"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

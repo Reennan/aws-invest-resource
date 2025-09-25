@@ -110,7 +110,21 @@ const DashboardLayout = () => {
   };
 
   const getRoleBadgeVariant = (role: string) => {
-    return role === 'admin' ? 'default' : 'secondary';
+    switch (role) {
+      case 'admin': return 'default';
+      case 'editor': return 'secondary';
+      case 'viewer': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Admin';
+      case 'editor': return 'Editor';
+      case 'viewer': return 'Viewer';
+      default: return role;
+    }
   };
 
   return (
@@ -191,7 +205,7 @@ const DashboardLayout = () => {
                           variant={getRoleBadgeVariant(profile.role)} 
                           className="text-xs px-2 py-0"
                         >
-                          {profile.role === 'admin' ? 'Admin' : 'Viewer'}
+                          {getRoleLabel(profile.role)}
                         </Badge>
                         <div className="flex items-center gap-1">
                           <Activity className="h-3 w-3 text-success" />
@@ -246,7 +260,7 @@ const DashboardLayout = () => {
               </AvatarFallback>
             </Avatar>
             <Badge variant={getRoleBadgeVariant(profile.role)} className="text-xs">
-              {profile.role === 'admin' ? 'Admin' : 'Viewer'}
+              {getRoleLabel(profile.role)}
             </Badge>
             <div className="flex items-center gap-1">
               <Activity className="h-3 w-3 text-success" />

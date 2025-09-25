@@ -1,17 +1,21 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClusters } from '@/hooks/useClusters';
 import { useResources } from '@/hooks/useResources';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink, Server, Activity, Clock, AlertTriangle } from 'lucide-react';
+import { Server, Activity, AlertTriangle } from 'lucide-react';
+import { ResourceFilters } from '@/components/ResourceFilters';
+import { PaginatedResourceTable } from '@/components/PaginatedResourceTable';
 
 const Clusters = () => {
   const { profile } = useAuth();
   const { clusters, loading: clustersLoading } = useClusters();
   const { createdResources, unusedResources, loading: resourcesLoading } = useResources();
+  const [selectedCluster, setSelectedCluster] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [activeTab, setActiveTab] = useState('created');
 
   if (!profile?.can_view_clusters) {
     return (
@@ -36,22 +40,51 @@ const Clusters = () => {
     );
   }
 
-  const getResourcesByCluster = (clusterId: string) => {
-    const created = createdResources.filter(r => r.cluster_id === clusterId);
-    const unused = unusedResources.filter(r => r.cluster_id === clusterId);
+  // Filtra recursos baseado nos filtros selecionados
+  const getFilteredResources = () => {
+    let created = [...createdResources];
+    let unused = [...unusedResources];
+
+    // Filtro por cluster
+    if (selectedCluster !== 'all') {
+      created = created.filter(r => r.cluster_id === selectedCluster);
+      unused = unused.filter(r => r.cluster_id === selectedCluster);
+    }
+
+    // Filtro por tipo
+    if (selectedType !== 'all') {
+      created = created.filter(r => r.type === selectedType);
+      unused = unused.filter(r => r.type === selectedType);
+    }
+
     return { created, unused };
   };
+
+  const filteredResources = getFilteredResources();
+
+  const handleClearFilters = () => {
+    setSelectedCluster('all');
+    setSelectedType('all');
+  };
+
+  // Reset filters when changing tabs
+  useEffect(() => {
+    setSelectedCluster('all');
+    setSelectedType('all');
+  }, [activeTab]);
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Clusters</h1>
-        <p className="text-muted-foreground">Gerencie seus clusters AWS</p>
+        <p className="text-muted-foreground">Gerencie e visualize recursos dos clusters AWS</p>
       </div>
 
+      {/* Resumo dos Clusters */}
       <div className="grid gap-6">
         {clusters.map((cluster) => {
-          const { created, unused } = getResourcesByCluster(cluster.id);
+          const clusterCreated = createdResources.filter(r => r.cluster_id === cluster.id);
+          const clusterUnused = unusedResources.filter(r => r.cluster_id === cluster.id);
           
           return (
             <Card key={cluster.id}>
@@ -73,131 +106,78 @@ const Clusters = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-success">{created.length}</div>
+                      <div className="text-2xl font-bold text-success">{clusterCreated.length}</div>
                       <div className="text-xs text-muted-foreground">Recursos</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-warning">{unused.length}</div>
+                      <div className="text-2xl font-bold text-warning">{clusterUnused.length}</div>
                       <div className="text-xs text-muted-foreground">Sem Uso</div>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="created" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="created" className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      Recursos Criados ({created.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="unused" className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Recursos Sem Uso ({unused.length})
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="created" className="mt-4">
-                    {created.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Conta</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Criado</TableHead>
-                            <TableHead>Console</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {created.map((resource) => (
-                            <TableRow key={resource.id}>
-                              <TableCell className="font-medium">{resource.name}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{resource.type}</Badge>
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{resource.account_name}</TableCell>
-                              <TableCell>
-                                <Badge variant={resource.manage_status === 'active' ? 'default' : 'secondary'}>
-                                  {resource.manage_status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                {new Date(resource.created_at).toLocaleDateString('pt-BR')}
-                              </TableCell>
-                              <TableCell>
-                                <Button size="sm" variant="ghost" asChild>
-                                  <a href={resource.console_link} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Nenhum recurso criado encontrado
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="unused" className="mt-4">
-                    {unused.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Conta</TableHead>
-                            <TableHead>Dias sem Uso</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Console</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {unused.map((resource) => (
-                            <TableRow key={resource.id}>
-                              <TableCell className="font-medium">{resource.name}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{resource.type}</Badge>
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{resource.account_name}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4 text-warning" />
-                                  <span className="font-medium">{resource.days_without_use} dias</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="destructive">{resource.status}</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Button size="sm" variant="ghost" asChild>
-                                  <a href={resource.console_link} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Nenhum recurso sem uso encontrado
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* Recursos com Filtros e Paginação */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recursos dos Clusters</CardTitle>
+          <p className="text-muted-foreground">
+            Visualize e filtre recursos criados e sem uso nos clusters
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="created" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Recursos Criados ({filteredResources.created.length})
+              </TabsTrigger>
+              <TabsTrigger value="unused" className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Recursos Sem Uso ({filteredResources.unused.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="created" className="mt-6 space-y-6">
+              <ResourceFilters
+                selectedCluster={selectedCluster}
+                selectedType={selectedType}
+                onClusterChange={setSelectedCluster}
+                onTypeChange={setSelectedType}
+                onClearFilters={handleClearFilters}
+                clusters={clusters}
+              />
+              
+              <PaginatedResourceTable 
+                resources={filteredResources.created}
+                type="created"
+              />
+            </TabsContent>
+            
+            <TabsContent value="unused" className="mt-6 space-y-6">
+              <ResourceFilters
+                selectedCluster={selectedCluster}
+                selectedType={selectedType}
+                onClusterChange={setSelectedCluster}
+                onTypeChange={setSelectedType}
+                onClearFilters={handleClearFilters}
+                clusters={clusters}
+              />
+              
+              <PaginatedResourceTable 
+                resources={filteredResources.unused}
+                type="unused"
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
