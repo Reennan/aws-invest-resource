@@ -86,20 +86,33 @@ const Reports = () => {
   };
 
   const handleExportReport = (format: 'csv' | 'xlsx') => {
-    // Simular exportação
-    toast({
-      title: "Exportação",
-      description: `Relatório ${format.toUpperCase()} será baixado em breve!`,
-    });
-    
-    // Aqui seria implementada a lógica de exportação real
-    console.log('Exporting report:', format, {
-      selectedClusters,
-      selectedTypes,
-      startDate,
-      endDate,
-      filteredResources
-    });
+    try {
+      // Criar mapa de clusters para facilitar lookup
+      const clustersMap = clusters.reduce((acc, cluster) => {
+        acc[cluster.id] = cluster.name;
+        return acc;
+      }, {} as Record<string, string>);
+
+      if (format === 'csv') {
+        const { exportToCSV } = require('@/lib/exportUtils');
+        exportToCSV(filteredResources.created, filteredResources.unused, clustersMap);
+      } else if (format === 'xlsx') {
+        const { exportToExcel } = require('@/lib/exportUtils');
+        exportToExcel(filteredResources.created, filteredResources.unused, clustersMap);
+      }
+
+      toast({
+        title: "Exportação Concluída",
+        description: `Relatório ${format.toUpperCase()} foi baixado com sucesso!`,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast({
+        title: "Erro na Exportação",
+        description: `Ocorreu um erro ao gerar o arquivo ${format.toUpperCase()}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Recursos por tipo (filtrados)
