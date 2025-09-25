@@ -298,12 +298,13 @@ const AdminUsers = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                    <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {user.role === 'admin' && (
                           <>
@@ -346,9 +347,12 @@ const AdminUsers = () => {
                           <Key className="mr-2 h-4 w-4" />
                           Alterar Senha
                         </DropdownMenuItem>
-                        <UserClusterPermissions user={user} />
                       </DropdownMenuContent>
-                    </DropdownMenu>
+                      </DropdownMenu>
+                      
+                      {/* Botão separado para gerenciar clusters */}
+                      <UserClusterPermissions user={user} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
