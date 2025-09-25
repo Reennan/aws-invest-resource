@@ -26,7 +26,14 @@ interface PieData {
   percentage: number;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658'];
+const CHART_COLORS = [
+  'hsl(var(--chart-pie-1))',
+  'hsl(var(--chart-pie-2))', 
+  'hsl(var(--chart-pie-3))',
+  'hsl(var(--chart-pie-4))',
+  'hsl(var(--chart-pie-5))',
+  'hsl(var(--chart-pie-6))'
+];
 
 export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
   const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 7));
@@ -127,9 +134,9 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       {/* Bar Chart */}
-      <Card>
+      <Card className="shadow-medium">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-xl font-semibold">
             Recursos por Dia
             <div className="flex space-x-2">
               <Popover>
@@ -175,15 +182,39 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
               <div className="text-muted-foreground">Carregando...</div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    boxShadow: 'var(--shadow-medium)'
+                  }}
+                />
                 <Legend />
-                <Bar dataKey="created" fill="#10b981" name="Recursos Criados" />
-                <Bar dataKey="unused" fill="#f59e0b" name="Recursos Sem Uso" />
+                <Bar 
+                  dataKey="created" 
+                  fill="hsl(var(--chart-created))" 
+                  name="Recursos Criados"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  dataKey="unused" 
+                  fill="hsl(var(--chart-unused))" 
+                  name="Recursos Sem Uso"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -191,17 +222,17 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
       </Card>
 
       {/* Pie Chart */}
-      <Card>
+      <Card className="shadow-medium">
         <CardHeader>
-          <CardTitle>Recursos Sem Uso por Tipo</CardTitle>
+          <CardTitle className="text-xl font-semibold">Recursos Sem Uso por Tipo</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="h-[300px] flex items-center justify-center">
+            <div className="h-[400px] flex items-center justify-center">
               <div className="text-muted-foreground">Carregando...</div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
                   data={pieData}
@@ -209,20 +240,34 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
                   cy="50%"
                   labelLine={false}
                   label={({ name, percentage }) => `${name}: ${percentage}%`}
-                  outerRadius={100}
+                  outerRadius={120}
+                  innerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`hsl(var(--chart-pie-${(index % 6) + 1}))`}
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [value, name]} />
+                <Tooltip 
+                  formatter={(value, name) => [value, name]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    boxShadow: 'var(--shadow-medium)'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
           {!loading && pieData.length === 0 && (
-            <div className="h-[300px] flex items-center justify-center">
+            <div className="h-[400px] flex items-center justify-center">
               <div className="text-muted-foreground">Nenhum dado disponível</div>
             </div>
           )}

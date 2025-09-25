@@ -61,11 +61,11 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Charts moved up */}
-      <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
-
       {/* Dashboard Stats */}
       <DashboardStats key={refreshing ? 'refreshing' : 'normal'} />
+
+      {/* Charts */}
+      <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
 
       {/* Latest Executions */}
       <LatestExecutions refreshTrigger={refreshing ? Date.now() : 0} />

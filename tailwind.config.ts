@@ -70,6 +70,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        chart: {
+          created: "hsl(var(--chart-created))",
+          "created-foreground": "hsl(var(--chart-created-foreground))",
+          unused: "hsl(var(--chart-unused))",
+          "unused-foreground": "hsl(var(--chart-unused-foreground))",
+          "pie-1": "hsl(var(--chart-pie-1))",
+          "pie-2": "hsl(var(--chart-pie-2))",
+          "pie-3": "hsl(var(--chart-pie-3))",
+          "pie-4": "hsl(var(--chart-pie-4))",
+          "pie-5": "hsl(var(--chart-pie-5))",
+          "pie-6": "hsl(var(--chart-pie-6))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
