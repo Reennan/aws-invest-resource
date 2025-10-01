@@ -242,7 +242,7 @@ const DashboardLayout = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 min-h-screen flex flex-col">
+      <div className="lg:pl-64 min-h-screen">
         {/* Mobile header */}
         <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-border bg-card px-4 shadow-soft lg:hidden">
           <Button
@@ -270,7 +270,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 pt-4 lg:pt-6">
+        <main className="min-h-screen">
           <Outlet />
         </main>
       </div>
