@@ -162,7 +162,7 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-4">
+    <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-4 pt-0">
       <div>
         <h1 className="text-3xl font-bold">Gerenciamento de Usuários</h1>
         <p className="text-muted-foreground">Gerencie usuários e suas permissões no sistema</p>
