@@ -4,7 +4,8 @@ import DashboardStats from '@/components/DashboardStats';
 import { DashboardCharts } from '@/components/DashboardCharts';
 import { LatestExecutions } from '@/components/LatestExecutions';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Cloud } from 'lucide-react';
+import { RefreshCw, Cloud, TrendingUp, Activity, Zap } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 const Index = () => {
   const { profile, loading } = useAuth();
@@ -36,67 +37,120 @@ const Index = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // This will trigger a re-render of DashboardStats which will fetch fresh data
     setTimeout(() => setRefreshing(false), 1000);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Visão geral de monitoramento e análise de recursos AWS
-          </p>
-        </div>
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
-      </div>
-
-      {/* 1ª Fileira: Dashboard Stats */}
-      <DashboardStats key={refreshing ? 'refreshing' : 'normal'} statsOnly />
-
-      {/* 2ª Fileira: Charts */}
-      <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
-
-      {/* 3ª Fileira: Recent Resources and Unused Types */}
-      <DashboardStats key={`${refreshing ? 'refreshing' : 'normal'}-sections`} sectionsOnly />
-
-      {/* 4ª Fileira: Latest Executions */}
-      <LatestExecutions refreshTrigger={refreshing ? Date.now() : 0} />
-
-        {/* Welcome Message for new users */}
-        {(!profile.can_view_clusters && !profile.can_view_reports) && (
-          <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-blue-100 rounded-xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0">
-              <Cloud className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Bem-vindo ao AWS Resource Monitor!</h3>
-              <p className="text-muted-foreground mb-4">
-                Você está visualizando o dashboard com acesso limitado. Para desbloquear mais recursos como gerenciamento de clusters e relatórios detalhados, entre em contato com seu administrador para atualizar suas permissões.
-              </p>
-              <div className="flex gap-2 text-sm">
-                <span className="px-2 py-1 bg-muted rounded text-muted-foreground">
-                  Função: {profile.role}
-                </span>
-                <span className="px-2 py-1 bg-success/10 text-success rounded">
-                  Acesso ao Dashboard ✓
-                </span>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="max-w-[1600px] mx-auto p-6 space-y-8 animate-fade-in">
+        
+        {/* Hero Header Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-8 shadow-xl border-2 border-primary/20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+          
+          <div className="relative flex items-center justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                  <Activity className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard AWS Monitor</h1>
+                  <p className="text-white/90 text-lg mt-1">
+                    Visão geral completa de monitoramento e análise de recursos AWS
+                  </p>
+                </div>
+              </div>
+              
+              {/* Quick Stats in Header */}
+              <div className="flex items-center gap-4 mt-4">
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+                  <TrendingUp className="h-4 w-4 text-white" />
+                  <span className="text-white font-semibold text-sm">Sistema Ativo</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+                  <Zap className="h-4 w-4 text-white" />
+                  <span className="text-white font-semibold text-sm">Monitoramento em Tempo Real</span>
+                </div>
               </div>
             </div>
+            
+            <Button 
+              onClick={handleRefresh}
+              disabled={refreshing}
+              size="lg"
+              className="gap-3 h-12 px-6 bg-white text-primary hover:bg-white/90 font-semibold shadow-lg"
+            >
+              <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+              Atualizar Dados
+            </Button>
           </div>
         </div>
-      )}
+
+        {/* Stats Cards Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-1 bg-gradient-primary rounded-full"></div>
+            <h2 className="text-2xl font-bold">Visão Geral de Recursos</h2>
+          </div>
+          <DashboardStats key={refreshing ? 'refreshing' : 'normal'} statsOnly />
+        </div>
+
+        {/* Charts Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-1 bg-gradient-accent rounded-full"></div>
+            <h2 className="text-2xl font-bold">Análise de Dados</h2>
+          </div>
+          <DashboardCharts refreshTrigger={refreshing ? Date.now() : 0} />
+        </div>
+
+        {/* Resources Sections */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-1 bg-gradient-primary rounded-full"></div>
+            <h2 className="text-2xl font-bold">Recursos Recentes</h2>
+          </div>
+          <DashboardStats key={`${refreshing ? 'refreshing' : 'normal'}-sections`} sectionsOnly />
+        </div>
+
+        {/* Latest Executions */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-1 bg-gradient-danger rounded-full"></div>
+            <h2 className="text-2xl font-bold">Últimas Execuções</h2>
+          </div>
+          <LatestExecutions refreshTrigger={refreshing ? Date.now() : 0} />
+        </div>
+
+        {/* Welcome Message for Limited Access Users */}
+        {(!profile.can_view_clusters && !profile.can_view_reports) && (
+          <Card className="border-2 shadow-lg bg-gradient-to-br from-card to-info/5">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Cloud className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">Bem-vindo ao AWS Resource Monitor! 🎉</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Você está visualizando o dashboard com acesso limitado. Para desbloquear mais recursos como gerenciamento de clusters e relatórios detalhados, entre em contato com seu administrador para atualizar suas permissões.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="px-3 py-1.5 bg-muted rounded-lg text-sm font-medium">
+                      Função: <span className="text-primary">{profile.role}</span>
+                    </div>
+                    <div className="px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm font-medium border border-success/20">
+                      ✓ Acesso ao Dashboard
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
