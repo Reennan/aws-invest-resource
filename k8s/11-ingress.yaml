@@ -2,14 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: aws-resource-ingress
-  namespace: aws-resource
+  namespace: ms-frontend-picpay-monitor
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
-  - host: aws-resource.local  # ALTERE PARA SEU DOMÍNIO
+  - host: ms-frontend-picpay-monitor.hom-lionx.com.br
     http:
       paths:
       - path: /

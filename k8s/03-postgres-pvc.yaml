@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: aws-resource
+  namespace: ms-frontend-picpay-monitor
 spec:
   accessModes:
     - ReadWriteOnce
