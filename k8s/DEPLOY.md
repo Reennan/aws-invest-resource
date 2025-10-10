@@ -141,32 +141,156 @@ Você deve receber: `{"status":"ok","timestamp":"..."}`
 
 ## 🎨 PASSO 5: BUILD E DEPLOY DO FRONTEND
 
+### 📂 5.0 - ESTRUTURA DE ARQUIVOS NECESSÁRIA
+
+**⚠️ IMPORTANTE:** Para fazer o build do frontend, você precisa estar no **diretório raiz do projeto**, onde estão localizados:
+
+```
+seu-projeto/
+├── k8s/                    # ✅ Você já tem
+├── backend/                # ✅ Você já tem
+├── src/                    # ⚠️ NECESSÁRIO - Código fonte React
+├── public/                 # ⚠️ NECESSÁRIO - Arquivos públicos
+├── Dockerfile              # ⚠️ NECESSÁRIO - Build do frontend
+├── nginx.conf              # ⚠️ NECESSÁRIO - Configuração Nginx
+├── package.json            # ⚠️ NECESSÁRIO - Dependências frontend
+├── vite.config.ts          # ⚠️ NECESSÁRIO - Configuração Vite
+├── tsconfig.json           # ⚠️ NECESSÁRIO - Configuração TypeScript
+├── tailwind.config.ts      # ⚠️ NECESSÁRIO - Configuração Tailwind
+├── index.html              # ⚠️ NECESSÁRIO - HTML principal
+└── .env                    # ⚠️ NECESSÁRIO - Variáveis de ambiente
+```
+
+**❌ SE VOCÊ SÓ TEM AS PASTAS `k8s/` E `backend/`:**
+1. Você precisa baixar/clonar o código completo do projeto frontend
+2. OU fazer o build em outra máquina que tenha o código completo
+3. OU pedir para alguém que tenha o código fazer o build e te passar a imagem Docker
+
+**✅ SE VOCÊ TEM TODOS OS ARQUIVOS, CONTINUE:**
+
+---
+
 ### 5.1 - Build da imagem Docker do Frontend
+
+**⚠️ ONDE EXECUTAR:** Na **raiz do projeto** (onde está o Dockerfile do frontend, não dentro de `k8s/` ou `backend/`)
+
 ```bash
+# 1. Vá para a raiz do projeto
+cd /caminho/completo/para/seu-projeto
+
+# 2. Verifique se você está no lugar certo (deve listar: Dockerfile, nginx.conf, src/, package.json)
+ls -la | grep -E "Dockerfile|nginx.conf|src|package.json"
+
+# 3. Execute o build do Docker
 docker build --build-arg VITE_API_URL=/api -t aws-resource-frontend:latest .
 ```
 
-**Nota:** Se você estiver usando Minikube:
+**O que esse comando faz:**
+- Instala as dependências Node.js do frontend (npm install)
+- Compila o código React/TypeScript/Vite (npm run build)
+- Cria uma imagem Docker com Nginx servindo os arquivos compilados
+- Configura `VITE_API_URL=/api` para o frontend se comunicar com o backend
+
+**⏱️ Tempo estimado:** 3-5 minutos (primeira vez pode demorar mais)
+
+**Para Minikube (se estiver usando localmente):**
 ```bash
 minikube image load aws-resource-frontend:latest
 ```
 
-### 5.2 - Aplicar ConfigMap do Frontend
+**Verificar se a imagem foi criada com sucesso:**
 ```bash
-kubectl apply -f k8s/09-frontend-configmap.yaml
+docker images | grep aws-resource-frontend
 ```
+
+**Resultado esperado:**
+```
+aws-resource-frontend   latest   abc123def456   2 minutes ago   50MB
+```
+
+---
+
+### 5.2 - Aplicar ConfigMap do Frontend
+
+**⚠️ ONDE EXECUTAR:** Na pasta `k8s/`
+
+```bash
+# 1. Entre na pasta k8s
+cd k8s/
+
+# 2. Aplicar o ConfigMap
+kubectl apply -f 09-frontend-configmap.yaml
+```
+
+**O que faz:** Configura a variável de ambiente `VITE_API_URL` para o frontend se comunicar com o backend através do DNS interno do Kubernetes (`http://backend.ms-frontend-picpay-monitor.svc.cluster.local:3000`)
+
+**Verificar se foi criado:**
+```bash
+kubectl get configmap -n ms-frontend-picpay-monitor
+kubectl describe configmap frontend-config -n ms-frontend-picpay-monitor
+```
+
+**Resultado esperado:**
+```
+Name:         frontend-config
+Namespace:    ms-frontend-picpay-monitor
+Data
+====
+VITE_API_URL:
+----
+http://backend.ms-frontend-picpay-monitor.svc.cluster.local:3000
+```
+
+---
 
 ### 5.3 - Deploy do Frontend
+
+**⚠️ ONDE EXECUTAR:** Ainda na pasta `k8s/`
+
 ```bash
-kubectl apply -f k8s/10-frontend-deployment.yaml
+# Aplicar o Deployment do frontend
+kubectl apply -f 10-frontend-deployment.yaml
 ```
 
-**O que faz:** Sobe 2 réplicas do Frontend (React + Vite + Nginx).
+**O que faz:** 
+- Cria um Deployment com 2 réplicas do Frontend
+- Cada réplica roda React + Vite + Nginx na porta 8080
+- Cria um Service ClusterIP expondo a porta 80
+- Configura probes de saúde (liveness e readiness)
 
-**Verificar se o frontend está rodando:**
+**Aguarde os pods subirem (30-60 segundos):**
 ```bash
-kubectl get pods -n ms-frontend-picpay-monitor
-kubectl logs -n ms-frontend-picpay-monitor -l app=frontend
+kubectl get pods -n ms-frontend-picpay-monitor -w
+```
+*(Pressione Ctrl+C para sair)*
+
+**Resultado esperado:**
+```
+NAME                        READY   STATUS    RESTARTS   AGE
+postgres-0                  1/1     Running   0          10m
+backend-xxxxx-yyyyy         1/1     Running   0          5m
+backend-xxxxx-zzzzz         1/1     Running   0          5m
+frontend-xxxxx-aaaaa        1/1     Running   0          30s  ✅
+frontend-xxxxx-bbbbb        1/1     Running   0          30s  ✅
+```
+
+**Ver logs do frontend:**
+```bash
+kubectl logs -n ms-frontend-picpay-monitor -l app=frontend --tail=50
+```
+
+**Verificar o Service:**
+```bash
+kubectl get svc -n ms-frontend-picpay-monitor frontend
+```
+
+**Testar o frontend localmente (opcional):**
+```bash
+# Fazer port-forward para acessar localmente
+kubectl port-forward -n ms-frontend-picpay-monitor svc/frontend 8080:80
+
+# Agora acesse no navegador: http://localhost:8080
+# (Pressione Ctrl+C para parar o port-forward)
 ```
 
 ---
