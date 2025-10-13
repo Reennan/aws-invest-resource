@@ -162,17 +162,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, name: string, phone?: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             name,
             phone,
-          }
+          },
+          emailRedirectTo: undefined
         }
       });
 
@@ -182,14 +180,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
+        return { error };
+      }
+
+      // Auto sign in after successful signup
+      if (data.user) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          toast({
+            title: "Erro no login automático",
+            description: signInError.message,
+            variant: "destructive",
+          });
+          return { error: signInError };
+        }
+
         toast({
           title: "Sucesso",
-          description: "Verifique seu e-mail para confirmar sua conta!",
+          description: "Conta criada com sucesso! Bem-vindo!",
         });
       }
 
-      return { error };
+      return { error: null };
     } catch (error: any) {
       toast({
         title: "Error",

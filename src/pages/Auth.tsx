@@ -108,16 +108,13 @@ const Auth = () => {
       const validatedData = signUpSchema.parse(signUpData);
       setIsSubmitting(true);
       
-      const { error } = await signUp(
+      await signUp(
         validatedData.email,
         validatedData.password,
         validatedData.name
       );
       
-      if (!error) {
-        // Show success message and switch to sign in
-        setIsSignUp(false);
-      }
+      // User will be auto-logged in and redirected by auth state change
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: any = {};
