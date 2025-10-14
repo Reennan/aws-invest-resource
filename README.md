@@ -108,9 +108,22 @@ npm run dev
 │   ├── hooks/           # React hooks (useAuth, useClusters, etc.)
 │   ├── lib/             # apiClient
 │   └── pages/           # Páginas
+├── supabase/            # ⚠️ DESABILITADO - não usa mais Supabase Cloud
+│   ├── config.toml     # Comentado/desabilitado
+│   ├── migrations/     # Histórico do schema (não aplicadas)
+│   └── README.md       # Explicação da desabilitação
 ├── .env                 # VITE_API_URL=/api
 └── Dockerfile           # Frontend build
 ```
+
+## ⚠️ Sobre a Pasta `supabase/`
+
+A pasta `supabase/` está **DESABILITADA** e mantida apenas como histórico:
+- O `config.toml` foi comentado
+- As migrations são apenas referência
+- **Nenhum dado passa pelo Supabase Cloud**
+
+Consulte `supabase/README.md` para detalhes.
 
 ## 📝 Licença
 
