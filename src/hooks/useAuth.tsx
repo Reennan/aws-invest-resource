@@ -175,11 +175,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Check if user already exists
+        if (error.message.includes('already registered')) {
+          toast({
+            title: "Erro",
+            description: "Este email já está cadastrado. Faça login.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return { error };
       }
 
@@ -208,8 +217,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return { error: null };
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Erro",
+        description: "Ocorreu um erro inesperado",
         variant: "destructive",
       });
       return { error };
