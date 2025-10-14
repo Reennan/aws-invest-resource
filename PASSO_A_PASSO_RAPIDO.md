@@ -1,52 +1,40 @@
-# 🚀 Passo a Passo Rápido - Migração PostgreSQL
+# 🚨 SOLUÇÃO: Comando de Build CORRETO
 
-## ⚡ O Que Você Precisa Fazer AGORA
+## ⚠️ PROBLEMA IDENTIFICADO
 
-### 1️⃣ Atualizar o .env (2 minutos)
+Você estava fazendo o build **SEM** o argumento `--build-arg VITE_API_URL=/api`, fazendo com que as variáveis do Supabase fossem compiladas no bundle JavaScript do Vite.
 
-```bash
-# Edite o arquivo .env na raiz do projeto
-nano .env
+## ✅ COMANDO CORRETO
 
-# DELETE tudo e deixe APENAS isto:
-VITE_API_URL=/api
-```
-
-### 2️⃣ Commit as Mudanças (1 minuto)
+### 1️⃣ Build com --no-cache (CRÍTICO!)
 
 ```bash
-git add .
-git commit -m "fix: Remove Supabase, usa PostgreSQL Kubernetes"
-git push origin main
-```
-
-### 3️⃣ Build Nova Imagem Docker (5 minutos)
-
-```bash
-# Limpar build anterior
-rm -rf dist/
-
 # Login no ECR
 aws ecr get-login-password --region us-east-1 | \
   docker login --username AWS --password-stdin \
   289208114389.dkr.ecr.us-east-1.amazonaws.com
 
-# Build com NOVA TAG (importante: v1.0.4 ou superior)
+# Build CORRETO com --build-arg e --no-cache
 docker build \
-  -t 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.4 \
   --build-arg VITE_API_URL=/api \
+  --no-cache \
+  -t 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.5 \
   -f Dockerfile .
 
 # Push para ECR
-docker push 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.4
+docker push 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.5
 ```
 
-### 4️⃣ Atualizar Kubernetes (2 minutos)
+**POR QUE ESTAVA DANDO ERRO:**
+- Você rodou: `docker build -t ... .` ❌
+- Deveria rodar: `docker build --build-arg VITE_API_URL=/api --no-cache -t ... .` ✅
+
+### 2️⃣ Atualizar Kubernetes
 
 ```bash
-# Atualizar imagem do deployment
+# Atualizar imagem do deployment (use v1.0.5!)
 kubectl set image deployment/frontend \
-  frontend=289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.4 \
+  frontend=289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.5 \
   -n ms-frontend-picpay-monitor
 
 # Forçar restart dos pods
@@ -56,19 +44,23 @@ kubectl rollout restart deployment/frontend -n ms-frontend-picpay-monitor
 kubectl rollout status deployment/frontend -n ms-frontend-picpay-monitor
 ```
 
-### 5️⃣ Testar (3 minutos)
+### 3️⃣ Testar
 
-1. Acesse: `https://ms-frontend-picpay-monitor.hom-lionx.com.br`
+1. Acesse o DNS do frontend
 2. Crie uma conta de teste
 3. Verifique no PostgreSQL:
 
 ```bash
-kubectl exec -it postgres-0 -n ms-frontend-picpay-monitor -- \
+kubectl exec -it statefulset/postgres -n ms-frontend-picpay-monitor -- \
   psql -U postgres -d aws_resource_db -c \
-  "SELECT email, created_at FROM auth.users ORDER BY created_at DESC LIMIT 5;"
+  "SELECT email, name, created_at FROM users_profile ORDER BY created_at DESC LIMIT 5;"
 ```
 
 **Resultado esperado:** Você deve ver o email da conta que acabou de criar!
+
+**Verificar que NÃO está no Supabase:**
+- Acesse: https://supabase.com/dashboard/project/kwbskfecgpvywxjjytai/auth/users
+- O novo usuário NÃO deve aparecer lá!
 
 ---
 
