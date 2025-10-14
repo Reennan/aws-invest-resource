@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Cloud } from 'lucide-react';
 import { z } from 'zod';
-import { PasswordResetDialog } from '@/components/PasswordResetDialog';
-import { PasswordResetForm } from '@/components/PasswordResetForm';
 
 const signInSchema = z.object({
   email: z.string().email('E-mail inválido').max(255),
@@ -26,16 +24,6 @@ const signUpSchema = z.object({
 
 const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
-  
-  // Check for password reset parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  const email = urlParams.get('email');
-  
-  // If we have token and email, show password reset form
-  if (token && email) {
-    return <PasswordResetForm token={token} email={email} />;
-  }
 
   // Redirect authenticated users to dashboard
   if (!loading && user) {
@@ -229,14 +217,6 @@ const Auth = () => {
               >
                 {isSubmitting ? 'Entrando...' : 'Entrar'}
               </Button>
-              
-              <div className="text-center">
-                <PasswordResetDialog>
-                  <Button variant="link" className="text-sm">
-                    Esqueceu sua senha?
-                  </Button>
-                </PasswordResetDialog>
-              </div>
             </form>
           )}
 
