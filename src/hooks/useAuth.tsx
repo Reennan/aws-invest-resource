@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+
+interface User {
+  id: string;
+  email: string;
+}
 
 interface UserProfile {
   id: string;
@@ -21,7 +25,6 @@ interface UserProfile {
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
   signingOut: boolean;
@@ -47,113 +50,61 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const { toast } = useToast();
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users_profile')
-        .select('*')
-        .eq('auth_user_id', userId)
-        .single();
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
-      if (error) {
-        console.error('Error fetching profile:', error);
+  const checkAuth = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
         return;
       }
 
-      setProfile(data);
+      const data = await apiClient.getUser();
+      setUser({ id: data.user.id, email: data.user.email });
+      setProfile(data.profile);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error checking auth:', error);
+      localStorage.removeItem('auth_token');
+      setUser(null);
+      setProfile(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    let mounted = true;
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state change:', event, session ? 'session exists' : 'no session');
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setSigningOut(false);
-          setLoading(false);
-          return;
-        }
-        
-        if (session?.user) {
-          // Update last login without waiting
-          supabase
-            .from('users_profile')
-            .update({ last_login: new Date().toISOString() })
-            .eq('auth_user_id', session.user.id);
-          
-          // Fetch profile
-          fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const data = await apiClient.signIn(email, password);
+      
+      setUser({ id: data.user.id, email: data.user.email });
+      setProfile(data.profile);
 
-      if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: "Login realizado com sucesso!",
-        });
+      toast({
+        title: "Sucesso",
+        description: "Login realizado com sucesso!",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      
+      let errorMessage = error.message || 'Erro ao fazer login';
+      
+      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Credenciais inválidas')) {
+        errorMessage = 'Email ou senha incorretos';
       }
 
-      return { error };
-    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Erro ao fazer login",
+        description: errorMessage,
         variant: "destructive",
       });
       return { error };
@@ -162,63 +113,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, name: string, phone?: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            phone,
-          },
-          emailRedirectTo: undefined
-        }
-      });
-
-      if (error) {
-        // Check if user already exists
-        if (error.message.includes('already registered')) {
-          toast({
-            title: "Erro",
-            description: "Este email já está cadastrado. Faça login.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erro",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-        return { error };
-      }
-
-      // Auto sign in after successful signup
-      if (data.user) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          toast({
-            title: "Erro no login automático",
-            description: signInError.message,
-            variant: "destructive",
-          });
-          return { error: signInError };
-        }
-
+      if (!name || name.trim().length === 0) {
         toast({
-          title: "Sucesso",
-          description: "Conta criada com sucesso! Bem-vindo!",
+          title: "Erro",
+          description: "Nome é obrigatório",
+          variant: "destructive",
         });
+        return { error: new Error("Name is required") };
       }
+
+      const data = await apiClient.signUp(email, password, name.trim());
+      
+      setUser({ id: data.user.id, email: data.user.email });
+      setProfile(data.profile);
+
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Bem-vindo ao AWS Resource Monitor!",
+      });
 
       return { error: null };
     } catch (error: any) {
+      console.error('Sign up error:', error);
+      
+      let errorMessage = error.message || 'Erro ao criar conta';
+      
+      if (errorMessage.includes('already exists') || errorMessage.includes('já existe') || errorMessage.includes('duplicate key')) {
+        errorMessage = 'Este email já está cadastrado. Faça login.';
+      }
+
       toast({
         title: "Erro",
-        description: "Ocorreu um erro inesperado",
+        description: errorMessage,
         variant: "destructive",
       });
       return { error };
@@ -226,54 +152,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signOut = async () => {
-    if (signingOut) return; // Evita múltiplas chamadas simultâneas
+    if (signingOut) return;
     
     try {
       setSigningOut(true);
       
-      // Limpa os estados imediatamente para evitar problemas
+      await apiClient.signOut();
+      
       setUser(null);
-      setSession(null);  
-      setProfile(null);
-      
-      // Tenta fazer logout, mas não falha se a sessão já foi invalidada
-      const { error } = await supabase.auth.signOut();
-      
-      // Não mostra erro se a sessão já estava invalidada
-      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
-        console.error('Logout error:', error);
-        toast({
-          title: "Aviso",  
-          description: "Sessão finalizada com sucesso",
-        });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: "Logout realizado com sucesso!",
-        });
-      }
-
-      // Força navegação para auth independente do resultado
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1000);
-      
-    } catch (error: any) {
-      console.error('Unexpected logout error:', error);
-      
-      // Mesmo com erro, limpa os estados e redireciona
-      setUser(null);
-      setSession(null);
       setProfile(null);
       
       toast({
-        title: "Sucesso",
-        description: "Sessão finalizada",
+        title: "Logout realizado",
+        description: "Você saiu da sua conta",
       });
       
       setTimeout(() => {
         window.location.href = '/auth';
-      }, 1000);
+      }, 500);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      
+      // Mesmo com erro, limpa os dados locais
+      setUser(null);
+      setProfile(null);
+      localStorage.removeItem('auth_token');
+      
+      toast({
+        title: "Sessão finalizada",
+        description: "Você foi desconectado",
+      });
+      
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 500);
+    } finally {
+      setSigningOut(false);
     }
   };
 
@@ -281,30 +195,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (!user) throw new Error('No user logged in');
 
-      const { error } = await supabase
-        .from('users_profile')
-        .update(updates)
-        .eq('auth_user_id', user.id);
+      const data = await apiClient.updateProfile(updates);
+      setProfile(data.profile);
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setProfile(prev => prev ? { ...prev, ...updates } : null);
-        toast({
-          title: "Sucesso",
-          description: "Perfil atualizado com sucesso!",
-        });
-      }
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso!",
+      });
 
-      return { error };
+      return { error: null };
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to update profile",
+        title: "Erro",
+        description: "Falha ao atualizar perfil",
         variant: "destructive",
       });
       return { error };
@@ -313,7 +216,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
     user,
-    session,
     profile,
     loading,
     signingOut,

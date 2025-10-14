@@ -498,7 +498,7 @@ const Account = () => {
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                     <span className="text-muted-foreground">Conta Criada</span>
                     <span className="font-medium">
-                      {user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}
+                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : 'N/A'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg border border-success/20">

@@ -12,7 +12,7 @@ interface RealtimeData {
 }
 
 export const useRealtime = (onDataChange?: (data: RealtimeData) => void) => {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [connected, setConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -36,7 +36,7 @@ export const useRealtime = (onDataChange?: (data: RealtimeData) => void) => {
   }, [onDataChange, toast]);
 
   useEffect(() => {
-    if (!session) {
+    if (!user) {
       setConnected(false);
       return;
     }
@@ -91,7 +91,7 @@ export const useRealtime = (onDataChange?: (data: RealtimeData) => void) => {
       }
       setConnected(false);
     };
-  }, [session]);
+  }, [user]);
 
   return {
     connected,
