@@ -1,5 +1,18 @@
 # Guia Completo de Migração - Supabase para PostgreSQL Kubernetes
 
+## ⚠️ ATENÇÃO: PROBLEMA IDENTIFICADO E SOLUCIONADO
+
+Se você já buildou a imagem e os usuários ainda estão sendo criados no Supabase:
+
+**CAUSA RAIZ:** O arquivo `.env` ainda continha variáveis `VITE_SUPABASE_*` que foram compiladas na imagem Docker.
+
+**SOLUÇÃO:** 
+1. Atualizar `.env` (remover variáveis Supabase)
+2. Rebuild da imagem Docker com nova tag
+3. Redeploy no Kubernetes
+
+---
+
 ## 📋 Pré-requisitos
 
 - [ ] Acesso ao repositório GitHub
@@ -10,23 +23,50 @@
 
 ---
 
-## 🔄 PASSO 1: Atualizar o Código no GitHub
+## 🔄 PASSO 1: Atualizar o Arquivo .env (CRÍTICO!)
 
-### 1.1 - Clone ou Pull do Repositório
+### 1.1 - Editar .env na Raiz do Projeto
+
+Abra o arquivo `.env` e **DELETE** todas as linhas relacionadas ao Supabase:
 
 ```bash
-# Se ainda não clonou
-git clone <seu-repositorio-github>
-cd <nome-do-repositorio>
+# ❌ REMOVA ESTAS LINHAS:
+# VITE_SUPABASE_PROJECT_ID="kwbskfecgpvywxjjytai"
+# VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGci..."
+# VITE_SUPABASE_URL="https://kwbskfecgpvywxjjytai.supabase.co"
 
-# OU se já tem o repositório
-cd <nome-do-repositorio>
-git pull origin main
+# ✅ DEIXE APENAS ISTO:
+VITE_API_URL=/api
 ```
 
-### 1.2 - Copie os Arquivos Atualizados
+**Arquivo `.env` final deve conter:**
+```bash
+# API URL - aponta para o backend que conecta ao PostgreSQL no Kubernetes
+VITE_API_URL=/api
+```
 
-Os seguintes arquivos foram modificados e precisam ser atualizados no seu repositório:
+### 1.2 - Verificar Alteração
+
+```bash
+cat .env
+# Deve mostrar APENAS a linha VITE_API_URL=/api
+```
+
+---
+
+## 🔄 PASSO 2: Atualizar Código no GitHub
+
+### 2.1 - Copie os Arquivos Atualizados
+
+Os seguintes arquivos foram modificados:
+
+**Arquivos CRÍTICOS:**
+- `.env` - ⚠️ **REMOVIDAS** variáveis Supabase
+- `src/integrations/supabase/client.ts` - Agora lança erro se usado
+
+**Componentes REMOVIDOS:**
+- `src/components/PasswordResetDialog.tsx` ❌
+- `src/components/PasswordResetForm.tsx` ❌
 
 **Hooks:**
 - `src/hooks/useUserClusterPermissions.tsx`
@@ -40,14 +80,21 @@ Os seguintes arquivos foram modificados e precisam ser atualizados no seu reposi
 
 **Páginas:**
 - `src/pages/Account.tsx`
+- `src/pages/Auth.tsx`
 
 **Documentação:**
 - `MIGRATE_TO_POSTGRES.md` (novo)
 - `DEPLOY_FRONTEND_KUBERNETES.md` (novo)
-- `GUIA_COMPLETO_MIGRACAO.md` (este arquivo - novo)
+- `GUIA_COMPLETO_MIGRACAO.md` (este arquivo)
+- `VERIFICACAO_MIGRACAO.md` (novo) ⭐
 
-### 1.3 - Commit e Push
+### 2.2 - Commit e Push
 
+```bash
+git add .
+git commit -m "fix: Remove Supabase e usa PostgreSQL Kubernetes"
+git push origin main
+```
 ```bash
 git add .
 git commit -m "feat: Migrar do Supabase para PostgreSQL no Kubernetes"
