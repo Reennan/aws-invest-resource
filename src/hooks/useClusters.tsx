@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface Cluster {
@@ -16,51 +16,12 @@ export const useClusters = () => {
 
   const fetchClusters = async () => {
     try {
-      // Para administradores, mostra todos os clusters
-      const { data: profile } = await supabase
-        .from('users_profile')
-        .select('role')
-        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      let query = supabase.from('clusters').select('*');
-
-      // Se não for admin, filtra apenas os clusters com permissão
-      if (profile?.role !== 'admin') {
-        const { data: userProfileId } = await supabase.rpc('get_user_profile_id');
-        
-        const { data: permissions } = await supabase
-          .from('user_cluster_permissions')
-          .select('cluster_id')
-          .eq('user_id', userProfileId)
-          .eq('can_view', true);
-
-        const clusterIds = permissions?.map(p => p.cluster_id) || [];
-        
-        if (clusterIds.length === 0) {
-          setClusters([]);
-          return;
-        }
-
-        query = query.in('id', clusterIds);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os clusters",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const data = await apiClient.getClusters();
       setClusters(data || []);
     } catch (error) {
       toast({
         title: "Erro", 
-        description: "Erro inesperado ao carregar clusters",
+        description: "Erro ao carregar clusters",
         variant: "destructive",
       });
     } finally {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResourceCreated {
@@ -38,75 +38,17 @@ export const useResources = () => {
 
   const fetchResources = async () => {
     try {
-      // Primeiro verifica se é admin
-      const { data: profile } = await supabase
-        .from('users_profile')
-        .select('role')
-        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      let clusterIds: string[] = [];
-
-      // Se for admin, pega todos os clusters
-      if (profile?.role === 'admin') {
-        const { data: allClusters } = await supabase
-          .from('clusters')
-          .select('id');
-        
-        clusterIds = allClusters?.map(c => c.id) || [];
-      } else {
-        // Se não for admin, pega apenas clusters permitidos
-        const { data: userProfileId } = await supabase.rpc('get_user_profile_id');
-        
-        const { data: permittedClusters, error: clusterError } = await supabase
-          .from('user_cluster_permissions')
-          .select('cluster_id')
-          .eq('user_id', userProfileId)
-          .eq('can_view', true);
-
-        if (clusterError) {
-          console.error('Error fetching permitted clusters:', clusterError);
-          return;
-        }
-
-        clusterIds = permittedClusters?.map(p => p.cluster_id) || [];
-      }
-
-      if (clusterIds.length === 0) {
-        setCreatedResources([]);
-        setUnusedResources([]);
-        return;
-      }
-
-      const [createdResult, unusedResult] = await Promise.all([
-        supabase
-          .from('resources_created')
-          .select('*')
-          .in('cluster_id', clusterIds)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('resources_unused')
-          .select('*')
-          .in('cluster_id', clusterIds)
-          .order('days_without_use', { ascending: false })
+      const [createdData, unusedData] = await Promise.all([
+        apiClient.getResourcesCreated(),
+        apiClient.getResourcesUnused()
       ]);
 
-      if (createdResult.error) {
-        console.error('Error fetching created resources:', createdResult.error);
-      } else {
-        setCreatedResources(createdResult.data || []);
-      }
-
-      if (unusedResult.error) {
-        console.error('Error fetching unused resources:', unusedResult.error);
-      } else {
-        setUnusedResources(unusedResult.data || []);
-      }
-
+      setCreatedResources(createdData || []);
+      setUnusedResources(unusedData || []);
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Erro inesperado ao carregar recursos",
+        description: "Erro ao carregar recursos",
         variant: "destructive",
       });
     } finally {

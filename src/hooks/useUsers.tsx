@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -25,25 +25,14 @@ export const useUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users_profile')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os usuários",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      setLoading(true);
+      const data = await apiClient.getUsers();
       setUsers(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao carregar usuários",
+        description: error.message || "Erro ao carregar usuários",
         variant: "destructive",
       });
     } finally {
@@ -53,31 +42,20 @@ export const useUsers = () => {
 
   const updateUserRole = async (userId: string, role: 'viewer' | 'admin' | 'editor') => {
     try {
-      const { error } = await supabase
-        .from('users_profile')
-        .update({ role })
-        .eq('id', userId);
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o papel do usuário",
-          variant: "destructive",
-        });
-        return false;
-      }
-
+      await apiClient.updateUser(userId, { role });
+      
       toast({
         title: "Sucesso",
-        description: "Papel do usuário atualizado com sucesso",
+        description: "Permissão atualizada com sucesso!",
       });
-      
+
       await fetchUsers();
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error updating user role:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao atualizar usuário",
+        description: error.message || "Erro ao atualizar permissão",
         variant: "destructive",
       });
       return false;
@@ -86,31 +64,20 @@ export const useUsers = () => {
 
   const toggleUserStatus = async (userId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('users_profile')
-        .update({ is_active: isActive })
-        .eq('id', userId);
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o status do usuário",
-          variant: "destructive",
-        });
-        return false;
-      }
-
+      await apiClient.updateUser(userId, { is_active: isActive });
+      
       toast({
         title: "Sucesso",
-        description: `Usuário ${isActive ? 'ativado' : 'desativado'} com sucesso`,
+        description: `Usuário ${isActive ? 'ativado' : 'desativado'} com sucesso!`,
       });
-      
+
       await fetchUsers();
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error toggling user status:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao atualizar status",
+        description: error.message || "Erro ao atualizar status",
         variant: "destructive",
       });
       return false;
@@ -119,31 +86,17 @@ export const useUsers = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('users_profile')
-        .delete()
-        .eq('id', userId);
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível excluir o usuário",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       toast({
-        title: "Sucesso",
-        description: "Usuário excluído com sucesso",
+        title: "Não implementado",
+        description: "Função de deletar usuário ainda não está disponível",
+        variant: "destructive",
       });
-      
-      await fetchUsers();
-      return true;
-    } catch (error) {
+      return false;
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao excluir usuário",
+        description: error.message || "Erro ao deletar usuário",
         variant: "destructive",
       });
       return false;

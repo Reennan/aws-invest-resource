@@ -15,12 +15,12 @@ const signInSchema = z.object({
 });
 
 const signUpSchema = z.object({
-  name: z.string().trim().min(1, 'Nome é obrigatório').max(100),
+  name: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   email: z.string().email('E-mail inválido').max(255),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(100),
-  confirmPassword: z.string()
+  confirmPassword: z.string().min(6, 'Confirmação de senha deve ter pelo menos 6 caracteres')
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Senhas não coincidem",
+  message: "As senhas não coincidem",
   path: ["confirmPassword"],
 });
 
