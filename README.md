@@ -1,73 +1,117 @@
-# Welcome to your Lovable project
+# AWS Resource Monitor - Kubernetes Internal
 
-## Project info
+Sistema de monitoramento de recursos AWS totalmente internalizado no cluster Kubernetes.
 
-**URL**: https://lovable.dev/projects/0092a14e-a9f0-4728-b170-77623017b264
+## 🏗️ Arquitetura
 
-## How can I edit this code?
+- **Frontend**: React + Vite + Nginx (porta 8080)
+- **Backend**: Node.js + Express (porta 3000)
+- **Database**: PostgreSQL StatefulSet (porta 5432)
+- **Ingress**: Kong
+- **Namespace**: `ms-frontend-picpay-monitor`
 
-There are several ways of editing your application.
+## 🚀 Deploy Rápido
 
-**Use Lovable**
+```bash
+# 1. Login no ECR
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin \
+  289208114389.dkr.ecr.us-east-1.amazonaws.com
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0092a14e-a9f0-4728-b170-77623017b264) and start prompting.
+# 2. Build Frontend (IMPORTANTE: usar --build-arg!)
+docker build \
+  --build-arg VITE_API_URL=/api \
+  --no-cache \
+  -t 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.6 \
+  -f Dockerfile .
 
-Changes made via Lovable will be committed automatically to this repo.
+# 3. Push
+docker push 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.6
 
-**Use your preferred IDE**
+# 4. Atualizar no Kubernetes
+kubectl set image deployment/frontend \
+  frontend=289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.6 \
+  -n ms-frontend-picpay-monitor
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+kubectl rollout restart deployment/frontend -n ms-frontend-picpay-monitor
+kubectl rollout status deployment/frontend -n ms-frontend-picpay-monitor
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📚 Documentação Completa
 
-Follow these steps:
+Consulte [`ARQUITETURA_INTERNA_KUBERNETES.md`](./ARQUITETURA_INTERNA_KUBERNETES.md) para:
+- Arquitetura detalhada
+- Fluxo de autenticação
+- Deploy completo (passo a passo)
+- Verificação e troubleshooting
+- Estrutura de arquivos
+- Endpoints da API
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## ⚠️ IMPORTANTE
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **NÃO use** o Supabase Cloud - tudo roda internamente no cluster
+- **SEMPRE** use `--build-arg VITE_API_URL=/api` ao fazer build do frontend
+- **SEMPRE** use `--no-cache` para evitar cache com variáveis antigas
+- O arquivo `.env` deve ter APENAS: `VITE_API_URL=/api`
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🔐 Credenciais do Banco de Dados
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```
+Host: postgres.ms-frontend-picpay-monitor.svc.cluster.local
+Port: 5432
+Database: aws_resource_db
+User: postgres
+Password: Primeiroacesso_2022
+```
+
+## 🌐 Acesso
+
+**URL**: https://ms-frontend-picpay-monitor.hom-lionx.com.br
+
+## ✅ Verificação Rápida
+
+```bash
+# Ver pods
+kubectl get pods -n ms-frontend-picpay-monitor
+
+# Ver logs
+kubectl logs -f deployment/frontend -n ms-frontend-picpay-monitor
+kubectl logs -f deployment/backend -n ms-frontend-picpay-monitor
+
+# Testar banco
+kubectl exec -it postgres-0 -n ms-frontend-picpay-monitor -- \
+  psql -U postgres -d aws_resource_db -c "SELECT COUNT(*) FROM public.users_profile;"
+```
+
+## 🛠️ Desenvolvimento Local
+
+```bash
+# Frontend
+npm install
+npm run dev
+
+# Backend
+cd backend
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Nota**: Para desenvolvimento local, ajuste `VITE_API_URL` no `.env` para apontar ao backend local.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📦 Estrutura
 
-**Use GitHub Codespaces**
+```
+.
+├── backend/              # Backend Node.js/Express
+├── k8s/                  # Manifestos Kubernetes
+├── src/                  # Frontend React
+│   ├── hooks/           # React hooks (useAuth, useClusters, etc.)
+│   ├── lib/             # apiClient
+│   └── pages/           # Páginas
+├── .env                 # VITE_API_URL=/api
+└── Dockerfile           # Frontend build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📝 Licença
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0092a14e-a9f0-4728-b170-77623017b264) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Proprietary - PicPay
