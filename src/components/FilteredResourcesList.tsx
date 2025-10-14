@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Server, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -35,44 +35,26 @@ export const FilteredResourcesList = ({
   const fetchResources = async () => {
     setLoading(true);
     try {
-      // Build query for created resources
-      let createdQuery = supabase
-        .from('resources_created')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (selectedCluster !== 'all') {
-        createdQuery = createdQuery.eq('cluster_id', selectedCluster);
-      }
-
-      if (selectedType !== 'all') {
-        createdQuery = createdQuery.eq('type', selectedType);
-      }
-
-      // Build query for unused resources  
-      let unusedQuery = supabase
-        .from('resources_unused')
-        .select('*')
-        .order('id', { ascending: false });
-
-      if (selectedCluster !== 'all') {
-        unusedQuery = unusedQuery.eq('cluster_id', selectedCluster);
-      }
-
-      if (selectedType !== 'all') {
-        unusedQuery = unusedQuery.eq('type', selectedType);
-      }
-
-      const [createdResult, unusedResult] = await Promise.all([
-        createdQuery,
-        unusedQuery
+      // Fetch all resources from API
+      const [allCreated, allUnused] = await Promise.all([
+        apiClient.getResourcesCreated(
+          selectedCluster !== 'all' ? { cluster_id: selectedCluster } : undefined
+        ),
+        apiClient.getResourcesUnused(
+          selectedCluster !== 'all' 
+            ? { cluster_id: selectedCluster, type: selectedType !== 'all' ? selectedType : undefined }
+            : { type: selectedType !== 'all' ? selectedType : undefined }
+        )
       ]);
 
-      if (createdResult.error) throw createdResult.error;
-      if (unusedResult.error) throw unusedResult.error;
+      // Filter by type if needed
+      let filteredCreated = allCreated || [];
+      if (selectedType !== 'all') {
+        filteredCreated = filteredCreated.filter(r => r.type === selectedType);
+      }
 
-      setCreatedResources(createdResult.data || []);
-      setUnusedResources(unusedResult.data || []);
+      setCreatedResources(filteredCreated);
+      setUnusedResources(allUnused || []);
     } catch (error) {
       console.error('Error fetching filtered resources:', error);
     } finally {

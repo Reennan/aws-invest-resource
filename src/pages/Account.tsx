@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Edit2, 
   Save, 
@@ -97,28 +96,20 @@ const Account = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
+      // Password change is not yet implemented in backend
+      // You'll need to add this endpoint to your backend API
+      toast({
+        title: "Não implementado",
+        description: "A mudança de senha pelo frontend ainda não está disponível. Entre em contato com o administrador.",
+        variant: "destructive",
       });
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setIsChangingPassword(false);
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-        toast({
-          title: "Sucesso",
-          description: "Senha alterada com sucesso!",
-        });
-      }
+      
+      setIsChangingPassword(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
     } catch (error) {
       toast({
         title: "Erro",

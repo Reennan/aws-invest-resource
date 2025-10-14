@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Database, AlertTriangle, CheckCircle, TrendingUp, Users, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaginatedResourceTable } from '@/components/PaginatedResourceTable';
@@ -49,46 +49,20 @@ const DashboardStats = ({ statsOnly = false, sectionsOnly = false }: DashboardSt
     try {
       setRefreshing(true);
       
-      // Fetch dashboard totals
-      const { data: totalsData, error: totalsError } = await supabase
-        .from('v_dashboard_totals')
-        .select('*')
-        .single();
-
-      if (totalsError) {
-        console.error('Error fetching totals:', totalsError);
-      } else {
-        setTotals(totalsData);
-      }
+      // Fetch dashboard stats (totals)
+      const dashboardData = await apiClient.getDashboardStats();
+      setTotals(dashboardData);
 
       // Fetch recent resources (last 10)
       setLoadingResources(true);
-      const { data: recentData, error: recentError } = await supabase
-        .from('resources_created')
-        .select('id, name, type, created_at, console_link, account_name, cluster_id')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (recentError) {
-        console.error('Error fetching recent resources:', recentError);
-      } else {
-        setRecentResources(recentData || []);
-      }
+      const recentData = await apiClient.getResourcesCreated();
+      setRecentResources(recentData?.slice(0, 10) || []);
       setLoadingResources(false);
 
       // Fetch unused by type
       setLoadingUnusedTypes(true);
-      const { data: unusedData, error: unusedError } = await supabase
-        .from('v_unused_by_type')
-        .select('*')
-        .order('total', { ascending: false })
-        .limit(8);
-
-      if (unusedError) {
-        console.error('Error fetching unused by type:', unusedError);
-      } else {
-        setUnusedByType(unusedData || []);
-      }
+      const unusedData = await apiClient.getUnusedByType();
+      setUnusedByType(unusedData?.slice(0, 8) || []);
       setLoadingUnusedTypes(false);
 
     } catch (error) {

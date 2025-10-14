@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { Clock, Server } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,21 +25,12 @@ export const LatestExecutions = ({ refreshTrigger }: LatestExecutionsProps) => {
 
   const fetchLatestExecutions = async () => {
     try {
-      // Get latest runs for each cluster
-      const { data: runsData, error: runsError } = await supabase
-        .from('runs')
-        .select(`
-          cluster_id,
-          created_count,
-          unused_count,
-          run_ts,
-          succeeded,
-          clusters(name)
-        `)
-        .order('run_ts', { ascending: false })
-        .limit(10);
-
-      if (runsError) throw runsError;
+      // Get latest runs (limited to 10)
+      const runsData = await apiClient.getRuns({ limit: 10 });
+      
+      // Get all clusters to map cluster names
+      const clustersData = await apiClient.getClusters();
+      const clustersMap = new Map(clustersData?.map(c => [c.id, c.name]) || []);
 
       // Group by cluster and get latest execution for each
       const clusterMap = new Map<string, ExecutionData>();
@@ -48,7 +39,7 @@ export const LatestExecutions = ({ refreshTrigger }: LatestExecutionsProps) => {
         if (!clusterMap.has(run.cluster_id)) {
           clusterMap.set(run.cluster_id, {
             cluster_id: run.cluster_id,
-            cluster_name: (run as any).clusters?.name || 'Cluster Desconhecido',
+            cluster_name: clustersMap.get(run.cluster_id) || 'Cluster Desconhecido',
             created_count: run.created_count,
             unused_count: run.unused_count,
             run_ts: run.run_ts,

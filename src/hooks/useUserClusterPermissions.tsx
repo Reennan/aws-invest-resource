@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserClusterPermission {
@@ -16,19 +16,7 @@ export const useUserClusterPermissions = () => {
 
   const fetchPermissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_cluster_permissions')
-        .select('*');
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as permissões",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const data = await apiClient.getUserClusterPermissions();
       setPermissions(data || []);
     } catch (error) {
       toast({
@@ -47,45 +35,16 @@ export const useUserClusterPermissions = () => {
     canView: boolean
   ) => {
     try {
-      // Verifica se já existe uma permissão
       const existingPermission = permissions.find(
         p => p.user_id === userId && p.cluster_id === clusterId
       );
 
-      let error;
-
-      if (existingPermission) {
-        if (canView) {
-          // Atualiza para permitir
-          ({ error } = await supabase
-            .from('user_cluster_permissions')
-            .update({ can_view: true })
-            .eq('id', existingPermission.id));
-        } else {
-          // Remove a permissão
-          ({ error } = await supabase
-            .from('user_cluster_permissions')
-            .delete()
-            .eq('id', existingPermission.id));
-        }
-      } else if (canView) {
-        // Cria nova permissão
-        ({ error } = await supabase
-          .from('user_cluster_permissions')
-          .insert({
-            user_id: userId,
-            cluster_id: clusterId,
-            can_view: true
-          }));
-      }
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
+      if (existingPermission && !canView) {
+        // Remove a permissão
+        await apiClient.deleteUserClusterPermission(userId, clusterId);
+      } else {
+        // Cria ou atualiza a permissão
+        await apiClient.updateUserClusterPermission(userId, clusterId, canView);
       }
 
       await fetchPermissions();
@@ -96,7 +55,7 @@ export const useUserClusterPermissions = () => {
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Erro ao atualizar permissão",
+        description: error.message || "Erro ao atualizar permissão",
         variant: "destructive",
       });
     }

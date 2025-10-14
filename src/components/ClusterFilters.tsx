@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { Filter } from 'lucide-react';
 
 interface ClusterFiltersProps {
@@ -39,14 +39,9 @@ export const ClusterFilters = ({
   useEffect(() => {
     const fetchClusters = async () => {
       try {
-        const { data, error } = await supabase
-          .from('clusters')
-          .select('id, name')
-          .eq('is_active', true)
-          .order('name');
-
-        if (error) throw error;
-        setClusters(data || []);
+        const data = await apiClient.getClusters();
+        const activeClusters = data?.filter(cluster => cluster.is_active) || [];
+        setClusters(activeClusters);
       } catch (error) {
         console.error('Error fetching clusters:', error);
       } finally {

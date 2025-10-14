@@ -6,7 +6,7 @@ import { Calendar1 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface DashboardChartsProps {
@@ -46,23 +46,23 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
     
     setLoading(true);
     try {
-      // Fetch resources created by day
-      const { data: createdData, error: createdError } = await supabase
-        .from('resources_created')
-        .select('created_at')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+      // Fetch all resources created
+      const createdData = await apiClient.getResourcesCreated();
+      
+      // Filter by date range
+      const filteredCreated = createdData?.filter(item => {
+        const itemDate = new Date(item.created_at);
+        return itemDate >= startDate && itemDate <= endDate;
+      }) || [];
 
-      if (createdError) throw createdError;
-
-      // Fetch resources unused by day (using runs table to get the period)
-      const { data: runsData, error: runsError } = await supabase
-        .from('runs')
-        .select('run_ts, unused_count')
-        .gte('run_ts', startDate.toISOString())
-        .lte('run_ts', endDate.toISOString());
-
-      if (runsError) throw runsError;
+      // Fetch runs data
+      const runsData = await apiClient.getRuns();
+      
+      // Filter runs by date range
+      const filteredRuns = runsData?.filter(run => {
+        const runDate = new Date(run.run_ts);
+        return runDate >= startDate && runDate <= endDate;
+      }) || [];
 
       // Process data by date
       const dateMap = new Map<string, { created: number; unused: number }>();
@@ -76,7 +76,7 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
       }
 
       // Count created resources by date
-      createdData?.forEach(item => {
+      filteredCreated.forEach(item => {
         const dateKey = format(new Date(item.created_at), 'yyyy-MM-dd');
         const existing = dateMap.get(dateKey);
         if (existing) {
@@ -85,7 +85,7 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
       });
 
       // Count unused resources by date (from runs)
-      runsData?.forEach(run => {
+      filteredRuns.forEach(run => {
         const dateKey = format(new Date(run.run_ts), 'yyyy-MM-dd');
         const existing = dateMap.get(dateKey);
         if (existing) {
@@ -103,11 +103,7 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
       setChartData(formattedData);
 
       // Fetch unused resources by type for pie chart
-      const { data: unusedByType, error: pieError } = await supabase
-        .from('v_unused_by_type')
-        .select('*');
-
-      if (pieError) throw pieError;
+      const unusedByType = await apiClient.getUnusedByType();
 
       if (unusedByType && unusedByType.length > 0) {
         const total = unusedByType.reduce((sum, item) => sum + (item.total || 0), 0);
