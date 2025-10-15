@@ -46,18 +46,37 @@ const authMiddleware = async (req: any, res: any, next: any) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const result = await pool.query(
-      'SELECT u.*, up.* FROM auth.users u LEFT JOIN public.users_profile up ON u.id = up.auth_user_id WHERE u.id = $1',
+    
+    // Buscar usuário do auth.users
+    const authUserResult = await pool.query(
+      'SELECT id, email FROM auth.users WHERE id = $1',
       [decoded.userId]
     );
 
-    if (result.rows.length === 0) {
+    if (authUserResult.rows.length === 0) {
       return res.status(401).json({ error: 'Usuário não encontrado' });
     }
 
-    req.user = result.rows[0];
+    // Buscar perfil do usuário
+    const profileResult = await pool.query(
+      'SELECT * FROM public.users_profile WHERE auth_user_id = $1',
+      [decoded.userId]
+    );
+
+    if (profileResult.rows.length === 0) {
+      return res.status(401).json({ error: 'Perfil do usuário não encontrado' });
+    }
+
+    // Combinar dados do auth e do perfil
+    req.user = {
+      id: authUserResult.rows[0].id,
+      email: authUserResult.rows[0].email,
+      ...profileResult.rows[0]
+    };
+    
     next();
   } catch (error) {
+    console.error('❌ [AUTH MIDDLEWARE] Erro:', error);
     return res.status(401).json({ error: 'Token inválido' });
   }
 };
@@ -486,28 +505,42 @@ app.get('/admin/users', authMiddleware, async (req: any, res) => {
 });
 
 app.patch('/admin/users/:id', authMiddleware, async (req: any, res) => {
+  console.log('📥 [UPDATE USER] Requisição recebida para atualizar usuário:', req.params.id);
+  console.log('📝 [UPDATE USER] Dados para atualização:', req.body);
   try {
     if (!req.user.can_manage_users) {
+      console.log('⚠️  [UPDATE USER] Usuário sem permissão:', req.user.id);
       return res.status(403).json({ error: 'Sem permissão' });
     }
 
     const { id } = req.params;
     const { role, is_active } = req.body;
     
+    console.log('🔄 [UPDATE USER] Atualizando perfil do usuário...');
     const result = await pool.query(
       'UPDATE public.users_profile SET role = COALESCE($1, role), is_active = COALESCE($2, is_active) WHERE id = $3 RETURNING *',
       [role, is_active, id]
     );
+    
+    if (result.rows.length === 0) {
+      console.log('❌ [UPDATE USER] Usuário não encontrado:', id);
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    console.log('✅ [UPDATE USER] Usuário atualizado com sucesso:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (error: any) {
+    console.error('❌ [UPDATE USER] ERRO:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Admin - Change user password
 app.patch('/admin/users/:id/password', authMiddleware, async (req: any, res) => {
+  console.log('📥 [CHANGE PASSWORD] Requisição recebida para alterar senha do usuário:', req.params.id);
   try {
     if (!req.user.can_manage_users) {
+      console.log('⚠️  [CHANGE PASSWORD] Usuário sem permissão:', req.user.id);
       return res.status(403).json({ error: 'Sem permissão' });
     }
 
@@ -515,62 +548,94 @@ app.patch('/admin/users/:id/password', authMiddleware, async (req: any, res) => 
     const { password } = req.body;
 
     if (!password || password.length < 6) {
+      console.log('⚠️  [CHANGE PASSWORD] Senha muito curta');
       return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
     }
 
     // Buscar auth_user_id do usuário
+    console.log('🔍 [CHANGE PASSWORD] Buscando auth_user_id...');
     const userResult = await pool.query(
-      'SELECT auth_user_id FROM public.users_profile WHERE id = $1',
+      'SELECT auth_user_id, email FROM public.users_profile WHERE id = $1',
       [id]
     );
 
     if (userResult.rows.length === 0) {
+      console.log('❌ [CHANGE PASSWORD] Usuário não encontrado no perfil:', id);
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     const authUserId = userResult.rows[0].auth_user_id;
+    const email = userResult.rows[0].email;
+    console.log('✅ [CHANGE PASSWORD] Usuário encontrado:', { authUserId, email });
 
     // Atualizar senha no auth.users
-    const bcrypt = require('bcrypt');
+    console.log('🔐 [CHANGE PASSWORD] Gerando hash da nova senha...');
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    await pool.query(
-      'UPDATE auth.users SET encrypted_password = $1 WHERE id = $2',
+    console.log('💾 [CHANGE PASSWORD] Atualizando senha no banco de dados...');
+    const updateResult = await pool.query(
+      'UPDATE auth.users SET encrypted_password = $1 WHERE id = $2 RETURNING id',
       [hashedPassword, authUserId]
     );
 
+    if (updateResult.rows.length === 0) {
+      console.log('❌ [CHANGE PASSWORD] Falha ao atualizar senha - usuário não encontrado em auth.users:', authUserId);
+      return res.status(404).json({ error: 'Usuário não encontrado na tabela de autenticação' });
+    }
+
+    console.log('✅ [CHANGE PASSWORD] Senha alterada com sucesso para usuário:', email);
     res.json({ message: 'Senha alterada com sucesso' });
   } catch (error: any) {
+    console.error('❌ [CHANGE PASSWORD] ERRO:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Admin - Delete user
 app.delete('/admin/users/:id', authMiddleware, async (req: any, res) => {
+  console.log('📥 [DELETE USER] Requisição recebida para excluir usuário:', req.params.id);
   try {
     if (!req.user.can_manage_users) {
+      console.log('⚠️  [DELETE USER] Usuário sem permissão:', req.user.id);
       return res.status(403).json({ error: 'Sem permissão' });
     }
 
     const { id } = req.params;
 
     // Buscar auth_user_id do usuário
+    console.log('🔍 [DELETE USER] Buscando dados do usuário...');
     const userResult = await pool.query(
-      'SELECT auth_user_id FROM public.users_profile WHERE id = $1',
+      'SELECT auth_user_id, email FROM public.users_profile WHERE id = $1',
       [id]
     );
 
     if (userResult.rows.length === 0) {
+      console.log('❌ [DELETE USER] Usuário não encontrado no perfil:', id);
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     const authUserId = userResult.rows[0].auth_user_id;
+    const email = userResult.rows[0].email;
+    console.log('✅ [DELETE USER] Usuário encontrado:', { authUserId, email });
 
     // Deletar do auth.users (cascade vai deletar do users_profile)
-    await pool.query('DELETE FROM auth.users WHERE id = $1', [authUserId]);
+    console.log('🗑️  [DELETE USER] Excluindo usuário do banco de dados...');
+    const deleteResult = await pool.query(
+      'DELETE FROM auth.users WHERE id = $1 RETURNING id',
+      [authUserId]
+    );
 
+    if (deleteResult.rows.length === 0) {
+      console.log('❌ [DELETE USER] Falha ao excluir - usuário não encontrado em auth.users:', authUserId);
+      return res.status(404).json({ error: 'Usuário não encontrado na tabela de autenticação' });
+    }
+
+    console.log('✅ [DELETE USER] Usuário excluído com sucesso:', email);
     res.json({ message: 'Usuário excluído com sucesso' });
   } catch (error: any) {
+    console.error('❌ [DELETE USER] ERRO:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });
