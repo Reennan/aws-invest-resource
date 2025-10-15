@@ -130,22 +130,22 @@ kubectl rollout status deployment/backend -n ms-frontend-picpay-monitor
 
 ## 5️⃣ Comandos de Deploy Atualizados
 
-### Backend (v1.0.2 ou superior)
+### Backend (v1.0.4 com logs detalhados)
 
 ```bash
 cd backend
 
 # Build
 docker build --no-cache \
-  -t 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.3 \
+  -t 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.4 \
   -f Dockerfile .
 
 # Push
-docker push 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.3
+docker push 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.4
 
 # Update & Restart
 kubectl set image deployment/backend \
-  backend=289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.3 \
+  backend=289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-backend:v1.0.4 \
   -n ms-frontend-picpay-monitor
 
 kubectl rollout restart deployment/backend -n ms-frontend-picpay-monitor
@@ -208,14 +208,60 @@ curl http://localhost:3000/health
 \q
 ```
 
+## 9️⃣ Visualizar Logs Detalhados (v1.0.4+)
+
+A versão v1.0.4 do backend inclui logs extensivos para debug:
+
+```bash
+# Ver logs em tempo real com emojis e informações detalhadas
+kubectl logs -f deployment/backend -n ms-frontend-picpay-monitor
+
+# Filtrar apenas logs de SIGNUP
+kubectl logs deployment/backend -n ms-frontend-picpay-monitor | grep SIGNUP
+
+# Filtrar apenas logs de SIGNIN
+kubectl logs deployment/backend -n ms-frontend-picpay-monitor | grep SIGNIN
+
+# Filtrar apenas erros
+kubectl logs deployment/backend -n ms-frontend-picpay-monitor | grep "❌"
+```
+
+### Logs esperados durante signup:
+```
+📥 [SIGNUP] Requisição recebida: { email: 'user@example.com', name: 'User Name' }
+🔍 [SIGNUP] Verificando se email já existe...
+🔐 [SIGNUP] Gerando hash da senha...
+👤 [SIGNUP] Criando usuário em auth.users...
+✅ [SIGNUP] Usuário criado: <uuid>
+🎫 [SIGNUP] Gerando JWT token...
+👔 [SIGNUP] Buscando perfil criado pelo trigger...
+✅ [SIGNUP] Perfil encontrado: <uuid>
+📤 [SIGNUP] Enviando resposta com sucesso
+```
+
+### Logs esperados durante signin:
+```
+📥 [SIGNIN] Requisição recebida: { email: 'user@example.com' }
+🔍 [SIGNIN] Buscando usuário...
+✅ [SIGNIN] Usuário encontrado: <uuid>
+🔐 [SIGNIN] Verificando senha...
+✅ [SIGNIN] Senha válida
+📅 [SIGNIN] Atualizando último login...
+🎫 [SIGNIN] Gerando JWT token...
+👔 [SIGNIN] Buscando perfil...
+✅ [SIGNIN] Perfil encontrado: <uuid>
+📤 [SIGNIN] Enviando resposta com sucesso
+```
+
 ## 📋 Checklist Rápido
 
-- [ ] Backend v1.0.3 ou superior está rodando
+- [ ] Backend v1.0.4 ou superior está rodando
 - [ ] Frontend v1.0.8 ou superior está rodando
 - [ ] JWT_SECRET está configurado no backend-secret
 - [ ] Usuário foi criado em `auth.users`
 - [ ] Perfil foi criado em `public.users_profile`
 - [ ] Trigger `on_auth_user_created` existe e está ativo
 - [ ] Backend retorna JSON no formato `{ user, profile, session }`
-- [ ] Logs do backend não mostram erros
+- [ ] Logs do backend mostram todos os passos (📥 → ✅ → 📤)
+- [ ] Sem erros ❌ nos logs
 - [ ] Testei em modo anônimo do navegador

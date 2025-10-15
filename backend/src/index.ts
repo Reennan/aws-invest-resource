@@ -8,6 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
+console.log('🚀 Iniciando servidor...');
+console.log('📝 Configurações:');
+console.log('   - PORT:', PORT);
+console.log('   - JWT_SECRET:', JWT_SECRET ? '✓ Configurado' : '✗ Não configurado');
+console.log('   - DB_HOST:', process.env.DB_HOST || 'postgres.aws-resource.svc.cluster.local');
+console.log('   - DB_NAME:', process.env.DB_NAME || 'aws_resource_db');
+console.log('   - DB_USER:', process.env.DB_USER || 'postgres');
+
 // Configuração do PostgreSQL
 const pool = new Pool({
   host: process.env.DB_HOST || 'postgres.aws-resource.svc.cluster.local',
@@ -15,6 +23,15 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'aws_resource_db',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'Primeiroacesso_2022',
+});
+
+// Testar conexão com o banco
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Erro ao conectar com PostgreSQL:', err.message);
+  } else {
+    console.log('✅ Conectado ao PostgreSQL em:', res.rows[0].now);
+  }
 });
 
 app.use(cors());
@@ -49,19 +66,24 @@ const authMiddleware = async (req: any, res: any, next: any) => {
 
 // Sign Up
 app.post('/auth/signup', async (req, res) => {
+  console.log('📥 [SIGNUP] Requisição recebida:', { email: req.body.email, name: req.body.name });
   try {
     const { email, password, name } = req.body;
 
     // Verificar se usuário já existe
+    console.log('🔍 [SIGNUP] Verificando se email já existe...');
     const existingUser = await pool.query('SELECT * FROM auth.users WHERE email = $1', [email]);
     if (existingUser.rows.length > 0) {
+      console.log('⚠️  [SIGNUP] Email já cadastrado:', email);
       return res.status(400).json({ error: 'Email já cadastrado' });
     }
 
     // Hash da senha
+    console.log('🔐 [SIGNUP] Gerando hash da senha...');
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Criar usuário
+    console.log('👤 [SIGNUP] Criando usuário em auth.users...');
     const userResult = await pool.query(
       `INSERT INTO auth.users (email, encrypted_password, email_confirmed_at, raw_user_meta_data) 
        VALUES ($1, $2, now(), $3) RETURNING *`,
@@ -69,17 +91,28 @@ app.post('/auth/signup', async (req, res) => {
     );
 
     const user = userResult.rows[0];
+    console.log('✅ [SIGNUP] Usuário criado:', user.id);
 
     // Criar token
+    console.log('🎫 [SIGNUP] Gerando JWT token...');
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
     // Buscar perfil criado pelo trigger
+    console.log('👔 [SIGNUP] Buscando perfil criado pelo trigger...');
     const profileResult = await pool.query(
       'SELECT * FROM public.users_profile WHERE auth_user_id = $1',
       [user.id]
     );
 
     const profile = profileResult.rows[0];
+    
+    if (!profile) {
+      console.error('❌ [SIGNUP] ERRO: Perfil não foi criado pelo trigger!');
+      return res.status(500).json({ error: 'Erro ao criar perfil do usuário' });
+    }
+    
+    console.log('✅ [SIGNUP] Perfil encontrado:', profile.id);
+    console.log('📤 [SIGNUP] Enviando resposta com sucesso');
     
     res.json({
       user: {
@@ -92,46 +125,65 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('Erro no signup:', error);
+    console.error('❌ [SIGNUP] ERRO CRÍTICO:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Sign In
 app.post('/auth/signin', async (req, res) => {
+  console.log('📥 [SIGNIN] Requisição recebida:', { email: req.body.email });
   try {
     const { email, password } = req.body;
 
     // Buscar usuário
+    console.log('🔍 [SIGNIN] Buscando usuário...');
     const userResult = await pool.query('SELECT * FROM auth.users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
+      console.log('⚠️  [SIGNIN] Usuário não encontrado:', email);
       return res.status(401).json({ error: 'Email ou senha incorretos' });
     }
 
     const user = userResult.rows[0];
+    console.log('✅ [SIGNIN] Usuário encontrado:', user.id);
 
     // Verificar senha
+    console.log('🔐 [SIGNIN] Verificando senha...');
     const isValid = await bcrypt.compare(password, user.encrypted_password);
     if (!isValid) {
+      console.log('⚠️  [SIGNIN] Senha incorreta para:', email);
       return res.status(401).json({ error: 'Email ou senha incorretos' });
     }
+    console.log('✅ [SIGNIN] Senha válida');
 
     // Atualizar último login
+    console.log('📅 [SIGNIN] Atualizando último login...');
     await pool.query(
       'UPDATE public.users_profile SET last_login = now() WHERE auth_user_id = $1',
       [user.id]
     );
 
     // Criar token
+    console.log('🎫 [SIGNIN] Gerando JWT token...');
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
     // Buscar perfil
+    console.log('👔 [SIGNIN] Buscando perfil...');
     const profileResult = await pool.query(
       'SELECT * FROM public.users_profile WHERE auth_user_id = $1',
       [user.id]
     );
 
     const profile = profileResult.rows[0];
+    
+    if (!profile) {
+      console.error('❌ [SIGNIN] ERRO: Perfil não encontrado!');
+      return res.status(500).json({ error: 'Perfil não encontrado' });
+    }
+    
+    console.log('✅ [SIGNIN] Perfil encontrado:', profile.id);
+    console.log('📤 [SIGNIN] Enviando resposta com sucesso');
     
     res.json({
       user: {
@@ -144,13 +196,15 @@ app.post('/auth/signin', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('Erro no signin:', error);
+    console.error('❌ [SIGNIN] ERRO CRÍTICO:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Get Current User
 app.get('/auth/user', authMiddleware, async (req: any, res) => {
+  console.log('📥 [GET USER] Requisição recebida para usuário:', req.user?.id);
   try {
     const profileResult = await pool.query(
       'SELECT * FROM public.users_profile WHERE auth_user_id = $1',
@@ -158,6 +212,13 @@ app.get('/auth/user', authMiddleware, async (req: any, res) => {
     );
 
     const profile = profileResult.rows[0];
+    
+    if (!profile) {
+      console.error('❌ [GET USER] Perfil não encontrado para usuário:', req.user.id);
+      return res.status(404).json({ error: 'Perfil não encontrado' });
+    }
+    
+    console.log('✅ [GET USER] Perfil retornado:', profile.id);
     
     res.json({
       user: {
@@ -167,6 +228,7 @@ app.get('/auth/user', authMiddleware, async (req: any, res) => {
       profile: profile
     });
   } catch (error: any) {
+    console.error('❌ [GET USER] ERRO:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -500,5 +562,9 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend API rodando na porta ${PORT}`);
+  console.log('\n' + '='.repeat(60));
+  console.log('🚀 Backend API RODANDO com sucesso!');
+  console.log('📡 Porta:', PORT);
+  console.log('🌍 Ambiente: Kubernetes');
+  console.log('='.repeat(60) + '\n');
 });
