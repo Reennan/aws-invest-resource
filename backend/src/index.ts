@@ -79,15 +79,16 @@ app.post('/auth/signup', async (req, res) => {
       [user.id]
     );
 
+    const profile = profileResult.rows[0];
+    
     res.json({
       user: {
         id: user.id,
-        email: user.email,
-        ...profileResult.rows[0]
+        email: user.email
       },
+      profile: profile,
       session: {
-        access_token: token,
-        user: user
+        access_token: token
       }
     });
   } catch (error: any) {
@@ -130,15 +131,16 @@ app.post('/auth/signin', async (req, res) => {
       [user.id]
     );
 
+    const profile = profileResult.rows[0];
+    
     res.json({
       user: {
         id: user.id,
-        email: user.email,
-        ...profileResult.rows[0]
+        email: user.email
       },
+      profile: profile,
       session: {
-        access_token: token,
-        user: user
+        access_token: token
       }
     });
   } catch (error: any) {
@@ -155,10 +157,14 @@ app.get('/auth/user', authMiddleware, async (req: any, res) => {
       [req.user.id]
     );
 
+    const profile = profileResult.rows[0];
+    
     res.json({
-      id: req.user.id,
-      email: req.user.email,
-      ...profileResult.rows[0]
+      user: {
+        id: req.user.id,
+        email: req.user.email
+      },
+      profile: profile
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -204,7 +210,7 @@ app.patch('/auth/profile', authMiddleware, async (req: any, res) => {
       [req.user.id]
     );
 
-    res.json(profileResult.rows[0]);
+    res.json({ profile: profileResult.rows[0] });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
