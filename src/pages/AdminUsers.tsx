@@ -39,7 +39,7 @@ import { Separator } from '@/components/ui/separator';
 
 const AdminUsers = () => {
   const { profile } = useAuth();
-  const { users, loading, updateUserRole, toggleUserStatus, deleteUser } = useUsers();
+  const { users, loading, updateUserRole, toggleUserStatus, deleteUser, changeUserPassword } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -141,21 +141,13 @@ const AdminUsers = () => {
 
     setPasswordLoading(true);
     try {
-      toast({
-        title: "Sucesso",
-        description: `Senha alterada com sucesso para ${selectedUser?.name || selectedUser?.email}!`,
-      });
-      
+      await changeUserPassword(selectedUser.id, newPassword);
       setIsPasswordDialogOpen(false);
       setNewPassword('');
       setConfirmPassword('');
       setSelectedUser(null);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao alterar senha",
-        variant: "destructive",
-      });
+      // Erro já tratado no hook
     } finally {
       setPasswordLoading(false);
     }

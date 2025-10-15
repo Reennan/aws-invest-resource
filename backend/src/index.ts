@@ -504,6 +504,77 @@ app.patch('/admin/users/:id', authMiddleware, async (req: any, res) => {
   }
 });
 
+// Admin - Change user password
+app.patch('/admin/users/:id/password', authMiddleware, async (req: any, res) => {
+  try {
+    if (!req.user.can_manage_users) {
+      return res.status(403).json({ error: 'Sem permissão' });
+    }
+
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+    }
+
+    // Buscar auth_user_id do usuário
+    const userResult = await pool.query(
+      'SELECT auth_user_id FROM public.users_profile WHERE id = $1',
+      [id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const authUserId = userResult.rows[0].auth_user_id;
+
+    // Atualizar senha no auth.users
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await pool.query(
+      'UPDATE auth.users SET encrypted_password = $1 WHERE id = $2',
+      [hashedPassword, authUserId]
+    );
+
+    res.json({ message: 'Senha alterada com sucesso' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin - Delete user
+app.delete('/admin/users/:id', authMiddleware, async (req: any, res) => {
+  try {
+    if (!req.user.can_manage_users) {
+      return res.status(403).json({ error: 'Sem permissão' });
+    }
+
+    const { id } = req.params;
+
+    // Buscar auth_user_id do usuário
+    const userResult = await pool.query(
+      'SELECT auth_user_id FROM public.users_profile WHERE id = $1',
+      [id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const authUserId = userResult.rows[0].auth_user_id;
+
+    // Deletar do auth.users (cascade vai deletar do users_profile)
+    await pool.query('DELETE FROM auth.users WHERE id = $1', [authUserId]);
+
+    res.json({ message: 'Usuário excluído com sucesso' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // User Cluster Permissions
 app.get('/user-cluster-permissions', authMiddleware, async (req: any, res) => {
   try {

@@ -151,6 +151,19 @@ class ApiClient {
     });
   }
 
+  async changeUserPassword(userId: string, password: string) {
+    return this.request<any>(`/admin/users/${userId}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ password }),
+    });
+  }
+
+  async deleteUser(userId: string) {
+    return this.request<any>(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // User Cluster Permissions
   async getUserClusterPermissions() {
     return this.request<any[]>('/user-cluster-permissions');

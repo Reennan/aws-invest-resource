@@ -86,12 +86,13 @@ export const useUsers = () => {
 
   const deleteUser = async (userId: string) => {
     try {
+      await apiClient.deleteUser(userId);
       toast({
-        title: "Não implementado",
-        description: "Função de deletar usuário ainda não está disponível",
-        variant: "destructive",
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso!",
       });
-      return false;
+      await fetchUsers();
+      return true;
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
@@ -100,6 +101,25 @@ export const useUsers = () => {
         variant: "destructive",
       });
       return false;
+    }
+  };
+
+  const changeUserPassword = async (userId: string, password: string) => {
+    try {
+      await apiClient.changeUserPassword(userId, password);
+      toast({
+        title: "Sucesso",
+        description: "Senha alterada com sucesso!",
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao alterar senha",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
@@ -114,5 +134,6 @@ export const useUsers = () => {
     updateUserRole,
     toggleUserStatus,
     deleteUser,
+    changeUserPassword,
   };
 };
