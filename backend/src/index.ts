@@ -39,8 +39,6 @@ const authMiddleware = async (req: any, res: any, next: any) => {
     }
 
     req.user = result.rows[0];
-    // Set user context for database functions
-    await pool.query(`SET LOCAL app.current_user_id = '${decoded.userId}'`);
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Token inválido' });
