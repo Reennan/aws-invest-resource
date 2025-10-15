@@ -1,0 +1,58 @@
+# ============================================
+# OPÇÃO 1: NodePort (Recomendado para desenvolvimento/homologação)
+# ============================================
+# Expõe o PostgreSQL em uma porta específica (30432) em todos os nodes do cluster
+# Acesso: <IP_DO_NODE>:30432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-external
+  namespace: ms-frontend-picpay-monitor
+spec:
+  type: NodePort
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+    nodePort: 30432  # Porta externa (range: 30000-32767)
+    protocol: TCP
+
+# ============================================
+# OPÇÃO 2: LoadBalancer (Para ambientes cloud com suporte)
+# ============================================
+# Cria um Load Balancer externo (funciona em AWS, GCP, Azure, etc)
+# O cloud provider irá provisionar um IP externo automaticamente
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: postgres-loadbalancer
+#   namespace: ms-frontend-picpay-monitor
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: postgres
+#   ports:
+#   - port: 5432
+#     targetPort: 5432
+#     protocol: TCP
+
+# ============================================
+# OPÇÃO 3: Ingress TCP com NGINX (Se você já usa nginx-ingress)
+# ============================================
+# Requer configuração adicional no nginx-ingress-controller
+# Adicione isso ao ConfigMap do nginx-ingress-controller:
+---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: tcp-services
+#   namespace: ingress-nginx  # Ajuste conforme seu namespace do ingress
+# data:
+#   5432: "ms-frontend-picpay-monitor/postgres:5432"
+#
+# Depois, atualize o nginx-ingress-controller deployment para usar este ConfigMap:
+# args:
+#   - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
