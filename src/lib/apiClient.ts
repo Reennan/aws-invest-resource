@@ -52,20 +52,26 @@ class ApiClient {
 
   // Auth
   async signUp(email: string, password: string, name: string) {
+    console.log('📡 [API CLIENT] POST /auth/signup');
     const data = await this.request<any>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });
+    console.log('📡 [API CLIENT] Resposta recebida:', data);
     this.saveToken(data.session.access_token);
+    console.log('📡 [API CLIENT] Token salvo no localStorage');
     return data;
   }
 
   async signIn(email: string, password: string) {
+    console.log('📡 [API CLIENT] POST /auth/signin');
     const data = await this.request<any>('/auth/signin', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    console.log('📡 [API CLIENT] Resposta recebida:', data);
     this.saveToken(data.session.access_token);
+    console.log('📡 [API CLIENT] Token salvo no localStorage');
     return data;
   }
 
