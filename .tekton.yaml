@@ -1,0 +1,16 @@
+sonar:
+  enabled: true
+  type: other
+  
+deploy:
+  type: argocd
+  
+build:
+  enabled: true
+
+steps:
+  - name: unit-tests
+    image: node:20-alpine
+    commands:
+      - npm ci
+      - npm test
