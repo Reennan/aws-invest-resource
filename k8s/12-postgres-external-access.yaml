@@ -8,7 +8,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-external
-  namespace: ms-frontend-picpay-monitor
+  namespace: ms-invest-portal-api
 spec:
   type: NodePort
   selector:
@@ -29,7 +29,7 @@ spec:
 # kind: Service
 # metadata:
 #   name: postgres-loadbalancer
-#   namespace: ms-frontend-picpay-monitor
+#   namespace: ms-invest-portal-api
 # spec:
 #   type: LoadBalancer
 #   selector:
@@ -51,7 +51,7 @@ spec:
 #   name: tcp-services
 #   namespace: ingress-nginx  # Ajuste conforme seu namespace do ingress
 # data:
-#   5432: "ms-frontend-picpay-monitor/postgres:5432"
+#   5432: "ms-invest-portal-api/postgres:5432"
 #
 # Depois, atualize o nginx-ingress-controller deployment para usar este ConfigMap:
 # args:

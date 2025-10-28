@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
-  namespace: ms-frontend-picpay-monitor
+  name: ms-invest-portal-api
+  namespace: ms-invest-portal-api
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: ms-invest-portal-api
   template:
     metadata:
       labels:
-        app: backend
+        app: ms-invest-portal-api
     spec:
       containers:
-      - name: backend
-        image: aws-resource-backend:latest
+      - name: ms-invest-portal-api
+        image: 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-backend-picpay-monitor:v1.0.8
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
@@ -75,11 +75,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend
-  namespace: ms-frontend-picpay-monitor
+  name: ms-invest-portal-api
+  namespace: ms-invest-portal-api
 spec:
   selector:
-    app: backend
+    app: ms-invest-portal-api
   ports:
   - port: 3000
     targetPort: 3000
