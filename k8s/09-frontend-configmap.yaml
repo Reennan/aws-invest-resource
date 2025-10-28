@@ -5,4 +5,3 @@ metadata:
   namespace: ms-invest-portal
 data:
   VITE_API_URL: "http://ms-invest-portal-api.ms-invest-portal-api.svc.cluster.local:3000"
-  BACKEND_URL: "http://ms-invest-portal-api.ms-invest-portal-api.svc.cluster.local:3000"
