@@ -15,14 +15,22 @@ console.log('   - JWT_SECRET:', JWT_SECRET ? '✓ Configurado' : '✗ Não confi
 console.log('   - DB_HOST:', process.env.DB_HOST || 'postgres.aws-resource.svc.cluster.local');
 console.log('   - DB_NAME:', process.env.DB_NAME || 'aws_resource_db');
 console.log('   - DB_USER:', process.env.DB_USER || 'postgres');
+console.log('   - DB_SSL:', process.env.DB_SSL || 'false');
+console.log('   - DB_SSL_REJECT_UNAUTHORIZED:', process.env.DB_SSL_REJECT_UNAUTHORIZED || 'true');
 
 // Configuração do PostgreSQL
+const sslEnabled = process.env.DB_SSL === 'true';
+const sslConfig = sslEnabled ? {
+  rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+} : false;
+
 const pool = new Pool({
   host: process.env.DB_HOST || 'postgres.aws-resource.svc.cluster.local',
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'aws_resource_db',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'Primeiroacesso_2022',
+  ssl: sslConfig,
 });
 
 // Testar conexão com o banco

@@ -52,6 +52,16 @@ spec:
             secretKeyRef:
               name: backend-secret
               key: DB_PASSWORD
+        - name: DB_SSL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DB_SSL
+        - name: DB_SSL_REJECT_UNAUTHORIZED
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DB_SSL_REJECT_UNAUTHORIZED
         resources:
           requests:
             memory: "128Mi"
