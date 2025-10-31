@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: ms-invest-portal.hom-lionx.com.br
+  - host: invest-portal.ligainvest.com.br
     http:
       paths:
       - path: /
