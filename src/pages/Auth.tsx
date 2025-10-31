@@ -65,21 +65,11 @@ const Auth = () => {
     setErrors({});
     
     try {
-      console.log('🚀 [AUTH PAGE] Iniciando handleSignIn');
       const validatedData = signInSchema.parse(signInData);
       setIsSubmitting(true);
       
-      console.log('📤 [AUTH PAGE] Chamando signIn...');
-      const { error } = await signIn(validatedData.email, validatedData.password);
-      
-      if (!error) {
-        console.log('✅ [AUTH PAGE] Login bem-sucedido! Navigate deve acontecer automaticamente');
-        // Navigate will happen automatically via auth state change
-      } else {
-        console.error('❌ [AUTH PAGE] Erro no login:', error);
-      }
+      await signIn(validatedData.email, validatedData.password);
     } catch (error) {
-      console.error('❌ [AUTH PAGE] Exceção no handleSignIn:', error);
       if (error instanceof z.ZodError) {
         const fieldErrors: any = {};
         error.issues.forEach((err) => {
@@ -99,26 +89,15 @@ const Auth = () => {
     setErrors({});
     
     try {
-      console.log('🚀 [AUTH PAGE] Iniciando handleSignUp');
       const validatedData = signUpSchema.parse(signUpData);
       setIsSubmitting(true);
       
-      console.log('📤 [AUTH PAGE] Chamando signUp...');
-      const { error } = await signUp(
+      await signUp(
         validatedData.email,
         validatedData.password,
         validatedData.name
       );
-      
-      if (!error) {
-        console.log('✅ [AUTH PAGE] Cadastro bem-sucedido! Navigate deve acontecer automaticamente');
-      } else {
-        console.error('❌ [AUTH PAGE] Erro no cadastro:', error);
-      }
-      
-      // User will be auto-logged in and redirected by auth state change
     } catch (error) {
-      console.error('❌ [AUTH PAGE] Exceção no handleSignUp:', error);
       if (error instanceof z.ZodError) {
         const fieldErrors: any = {};
         error.issues.forEach((err) => {

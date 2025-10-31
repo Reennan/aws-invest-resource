@@ -82,24 +82,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 [FRONTEND] Iniciando signIn...');
       const data = await apiClient.signIn(email, password);
-      console.log('✅ [FRONTEND] Dados recebidos do backend:', data);
       
       setUser({ id: data.user.id, email: data.user.email });
       setProfile(data.profile);
-      console.log('✅ [FRONTEND] Estado atualizado - user e profile setados');
 
       toast({
         title: "Sucesso",
         description: "Login realizado com sucesso!",
       });
       
-      console.log('✅ [FRONTEND] signIn completo, retornando sucesso');
       return { error: null };
     } catch (error: any) {
-      console.error('❌ [FRONTEND] Sign in error:', error);
-      
       let errorMessage = error.message || 'Erro ao fazer login';
       
       if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Credenciais inválidas')) {
@@ -117,7 +111,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, name: string, phone?: string) => {
     try {
-      console.log('📝 [FRONTEND] Iniciando signUp...');
       if (!name || name.trim().length === 0) {
         toast({
           title: "Erro",
@@ -128,22 +121,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       const data = await apiClient.signUp(email, password, name.trim());
-      console.log('✅ [FRONTEND] Conta criada, dados recebidos:', data);
       
       setUser({ id: data.user.id, email: data.user.email });
       setProfile(data.profile);
-      console.log('✅ [FRONTEND] Estado atualizado - user e profile setados');
 
       toast({
         title: "Conta criada com sucesso!",
         description: "Bem-vindo ao AWS Resource Monitor!",
       });
 
-      console.log('✅ [FRONTEND] signUp completo, retornando sucesso');
       return { error: null };
     } catch (error: any) {
-      console.error('❌ [FRONTEND] Sign up error:', error);
-      
       let errorMessage = error.message || 'Erro ao criar conta';
       
       if (errorMessage.includes('already exists') || errorMessage.includes('já existe') || errorMessage.includes('duplicate key')) {

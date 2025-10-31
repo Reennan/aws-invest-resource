@@ -1,10 +1,10 @@
+# Ingress para Frontend (Nginx faz proxy para Backend)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ms-invest-portal-ingress
   namespace: ms-invest-portal
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
@@ -19,11 +19,3 @@ spec:
             name: ms-invest-portal
             port:
               number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: ms-invest-portal-api
-            namespace: ms-invest-portal-api
-            port:
-              number: 3000
