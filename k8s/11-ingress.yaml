@@ -1,15 +1,17 @@
-# Ingress para Frontend (Nginx faz proxy para Backend)
+# Ingress para Frontend (Kong)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ms-invest-portal-ingress
   namespace: ms-invest-portal
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app: ms-invest-portal
+    external: "false"
+    priority: "5"
 spec:
-  ingressClassName: nginx
+  ingressClassName: kong
   rules:
-  - host: invest-portal.ligainvest.com.br
+  - host: invest-portal.hom-lionx.com.br
     http:
       paths:
       - path: /
@@ -19,3 +21,7 @@ spec:
             name: ms-invest-portal
             port:
               number: 80
+  tls:
+  - hosts:
+    - invest-portal.hom-lionx.com.br
+    secretName: ms-invest-portal
