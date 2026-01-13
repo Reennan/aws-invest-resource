@@ -52,6 +52,12 @@ const Reports = () => {
     );
   }
 
+  // Obter tipos únicos de recursos existentes
+  const availableTypes = [...new Set([
+    ...createdResources.map(r => r.type),
+    ...unusedResources.map(r => r.type)
+  ])].filter(Boolean).sort();
+
   const getFilteredResources = () => {
     let created = [...createdResources];
     let unused = [...unusedResources];
@@ -66,11 +72,25 @@ const Reports = () => {
       unused = unused.filter(r => selectedTypes.includes(r.type));
     }
 
+    // Filtrar por data de criação (created_at)
     if (startDate) {
-      created = created.filter(r => r.created_at && new Date(r.created_at) >= startDate);
+      const startOfDay = new Date(startDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      created = created.filter(r => r.created_at && new Date(r.created_at) >= startOfDay);
+      unused = unused.filter(r => {
+        // Para unused, usar o campo raw.created_at se disponível, ou outro campo de data
+        const resourceDate = r.raw?.created_at || r.raw?.CreatedTime;
+        return resourceDate && new Date(resourceDate) >= startOfDay;
+      });
     }
     if (endDate) {
-      created = created.filter(r => r.created_at && new Date(r.created_at) <= endDate);
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      created = created.filter(r => r.created_at && new Date(r.created_at) <= endOfDay);
+      unused = unused.filter(r => {
+        const resourceDate = r.raw?.created_at || r.raw?.CreatedTime;
+        return resourceDate && new Date(resourceDate) <= endOfDay;
+      });
     }
 
     return { created, unused };
@@ -235,6 +255,7 @@ const Reports = () => {
             onClearFilters={handleClearFilters}
             onExportReport={handleExportReport}
             clusters={clusters}
+            availableTypes={availableTypes}
           />
         </div>
 

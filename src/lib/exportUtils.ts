@@ -73,7 +73,10 @@ export const exportToExcel = (
   unusedResources: ResourceUnused[],
   clustersMap: Record<string, string>
 ) => {
-  // Preparar dados dos recursos criados
+  // Criar workbook
+  const workbook = XLSX.utils.book_new();
+
+  // Preparar e adicionar aba de Recursos Criados
   const createdData = createdResources.map(resource => ({
     'Nome': resource.name || '',
     'Tipo': resource.type || '',
@@ -83,27 +86,44 @@ export const exportToExcel = (
     'Status': resource.manage_status || '',
     'Link do Console': resource.console_link || ''
   }));
+  
+  const createdWorksheet = XLSX.utils.json_to_sheet(createdData);
+  // Ajustar largura das colunas
+  createdWorksheet['!cols'] = [
+    { wch: 40 }, // Nome
+    { wch: 15 }, // Tipo
+    { wch: 25 }, // Cluster
+    { wch: 20 }, // Conta
+    { wch: 18 }, // Data de Criação
+    { wch: 15 }, // Status
+    { wch: 60 }, // Link do Console
+  ];
+  XLSX.utils.book_append_sheet(workbook, createdWorksheet, 'Recursos Criados');
 
-  // Preparar dados dos recursos sem uso
+  // Preparar e adicionar aba de Recursos Sem Uso
   const unusedData = unusedResources.map(resource => ({
     'Nome': resource.name || '',
     'Tipo': resource.type || '',
+    'Resource ID': resource.resource_id || '',
     'Cluster': clustersMap[resource.cluster_id] || '',
     'Conta': resource.account_name || '',
     'Dias sem Uso': resource.days_without_use || 0,
     'Status': resource.status || '',
     'Link do Console': resource.console_link || ''
   }));
-
-  // Criar workbook
-  const workbook = XLSX.utils.book_new();
-
-  // Adicionar planilha de recursos criados
-  const createdWorksheet = XLSX.utils.json_to_sheet(createdData);
-  XLSX.utils.book_append_sheet(workbook, createdWorksheet, 'Recursos Criados');
-
-  // Adicionar planilha de recursos sem uso
+  
   const unusedWorksheet = XLSX.utils.json_to_sheet(unusedData);
+  // Ajustar largura das colunas
+  unusedWorksheet['!cols'] = [
+    { wch: 40 }, // Nome
+    { wch: 15 }, // Tipo
+    { wch: 30 }, // Resource ID
+    { wch: 25 }, // Cluster
+    { wch: 20 }, // Conta
+    { wch: 12 }, // Dias sem Uso
+    { wch: 15 }, // Status
+    { wch: 60 }, // Link do Console
+  ];
   XLSX.utils.book_append_sheet(workbook, unusedWorksheet, 'Recursos Sem Uso');
 
   // Download
