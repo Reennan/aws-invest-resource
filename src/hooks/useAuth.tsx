@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 // Credenciais de acesso offline para teste (bypass do backend)
 const OFFLINE_USER = {
-  email: 'usr_sre',
+  email: 'usr_sre@admin.local',
   password: 'admin'
 };
 
