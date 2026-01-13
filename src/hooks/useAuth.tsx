@@ -2,6 +2,12 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
+// Credenciais de acesso offline para teste (bypass do backend)
+const OFFLINE_USER = {
+  email: 'usr_sre',
+  password: 'admin'
+};
+
 interface User {
   id: string;
   email: string;
@@ -67,6 +73,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
+      // Verifica se é token offline
+      if (token === 'offline-token-sre') {
+        const offlineUser = { id: 'offline-user-sre', email: OFFLINE_USER.email };
+        const offlineProfile: UserProfile = {
+          id: 'offline-profile-sre',
+          auth_user_id: 'offline-user-sre',
+          name: 'SRE User (Offline)',
+          email: OFFLINE_USER.email,
+          phone: null,
+          role: 'admin',
+          last_login: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          is_active: true,
+          can_view_dashboard: true,
+          can_view_clusters: true,
+          can_view_reports: true,
+          can_manage_users: true,
+        };
+        setUser(offlineUser);
+        setProfile(offlineProfile);
+        setLoading(false);
+        return;
+      }
+
       const data = await apiClient.getUser();
       setUser({ id: data.user.id, email: data.user.email });
       setProfile(data.profile);
@@ -82,6 +112,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Verifica se é acesso offline de teste
+      if (email === OFFLINE_USER.email && password === OFFLINE_USER.password) {
+        const offlineUser = { id: 'offline-user-sre', email: OFFLINE_USER.email };
+        const offlineProfile: UserProfile = {
+          id: 'offline-profile-sre',
+          auth_user_id: 'offline-user-sre',
+          name: 'SRE User (Offline)',
+          email: OFFLINE_USER.email,
+          phone: null,
+          role: 'admin',
+          last_login: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          is_active: true,
+          can_view_dashboard: true,
+          can_view_clusters: true,
+          can_view_reports: true,
+          can_manage_users: true,
+        };
+        
+        setUser(offlineUser);
+        setProfile(offlineProfile);
+        localStorage.setItem('auth_token', 'offline-token-sre');
+        
+        toast({
+          title: "Sucesso",
+          description: "Login offline realizado com sucesso!",
+        });
+        
+        return { error: null };
+      }
+
       const data = await apiClient.signIn(email, password);
       
       setUser({ id: data.user.id, email: data.user.email });
