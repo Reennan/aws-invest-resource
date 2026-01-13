@@ -24,19 +24,8 @@ interface ReportsFiltersProps {
   onClearFilters: () => void;
   onExportReport: (format: 'csv' | 'xlsx') => void;
   clusters: { id: string; name: string }[];
+  availableTypes: string[];
 }
-
-const resourceTypes = [
-  { value: 'all', label: 'Todos os Tipos' },
-  { value: 'ec2', label: 'EC2' },
-  { value: 'lambda', label: 'Lambda' },
-  { value: 'rds', label: 'RDS' },
-  { value: 's3', label: 'S3' },
-  { value: 'elb', label: 'ELB' },
-  { value: 'cloudformation', label: 'CloudFormation' },
-  { value: 'ecs', label: 'ECS' },
-  { value: 'vpc', label: 'VPC' },
-];
 
 export const ReportsFilters = ({
   selectedClusters,
@@ -49,7 +38,8 @@ export const ReportsFilters = ({
   onEndDateChange,
   onClearFilters,
   onExportReport,
-  clusters
+  clusters,
+  availableTypes
 }: ReportsFiltersProps) => {
   const hasActiveFilters = selectedClusters.length > 0 || selectedTypes.length > 0 || startDate || endDate;
 
@@ -153,46 +143,56 @@ export const ReportsFilters = ({
           {/* Filtro por Tipo */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Tipos de Recurso</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  {selectedTypes.length === 0
-                    ? "Selecione tipos"
-                    : selectedTypes.length === 1
-                    ? resourceTypes.find(t => t.value === selectedTypes[0])?.label
-                    : `${selectedTypes.length} tipos selecionados`
-                  }
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="start">
-                <div className="p-4 space-y-2">
-                  {resourceTypes.filter(type => type.value !== 'all').map((type) => (
-                    <div key={type.value} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={type.value}
-                        checked={selectedTypes.includes(type.value)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            onTypesChange([...selectedTypes, type.value]);
-                          } else {
-                            onTypesChange(selectedTypes.filter(t => t !== type.value));
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor={type.value}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {type.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {availableTypes.length === 0 ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal text-muted-foreground"
+                disabled
+              >
+                Nenhum tipo disponível
+              </Button>
+            ) : (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    {selectedTypes.length === 0
+                      ? "Selecione tipos"
+                      : selectedTypes.length === 1
+                      ? selectedTypes[0].toUpperCase()
+                      : `${selectedTypes.length} tipos selecionados`
+                    }
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="p-4 space-y-2">
+                    {availableTypes.map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={type}
+                          checked={selectedTypes.includes(type)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              onTypesChange([...selectedTypes, type]);
+                            } else {
+                              onTypesChange(selectedTypes.filter(t => t !== type));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={type}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {type.toUpperCase()}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
 
           {/* Data de Início */}
