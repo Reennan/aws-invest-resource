@@ -4,4 +4,4 @@ metadata:
   name: frontend-config
   namespace: ms-invest-portal
 data:
-  BACKEND_URL: "http://ms-invest-portal-api.ms-invest-portal-api.svc.cluster.local:3000"
+  BACKEND_URL: "http://invest-portal-api.ms-invest-portal-api.svc.cluster.local:3000"
