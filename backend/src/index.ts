@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'token';
 
 console.log('🚀 Backend iniciando...');
 
@@ -17,13 +17,15 @@ const sslConfig = sslEnabled ? {
 } : false;
 
 const pool = new Pool({
-  host: process.env.DB_HOST || 'postgres.aws-resource.svc.cluster.local',
+  host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'aws_resource_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'Primeiroacesso_2022',
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   ssl: sslConfig,
 });
+
+
 
 // Testar conexão com o banco
 pool.query('SELECT NOW()', (err, res) => {
