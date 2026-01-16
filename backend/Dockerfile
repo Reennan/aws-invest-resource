@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM 289208114389.dkr.ecr.us-east-1.amazonaws.com/moonlight-images/node:20.18.1-alpine
 
 WORKDIR /app
 
