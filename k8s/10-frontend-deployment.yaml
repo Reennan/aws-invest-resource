@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ms-invest-portal
+  name: invest-portal
   namespace: ms-invest-portal
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ms-invest-portal
+      app: invest-portal
   template:
     metadata:
       labels:
-        app: ms-invest-portal
+        app: invest-portal
     spec:
       containers:
-      - name: ms-invest-portal
+      - name: invest-portal
         image: 289208114389.dkr.ecr.us-east-1.amazonaws.com/picpay-dev/ms-resource-frontend:v1.0.8
         imagePullPolicy: IfNotPresent
         ports:
@@ -45,11 +45,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-invest-portal
+  name: invest-portal
   namespace: ms-invest-portal
 spec:
   selector:
-    app: ms-invest-portal
+    app: invest-portal
   ports:
   - port: 80
     targetPort: 8080
