@@ -146,17 +146,51 @@ export const PaginatedResourceTable = ({
             </Button>
             
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => goToPage(page)}
-                  className="h-8 w-8 p-0 text-xs"
-                >
-                  {page}
-                </Button>
-              ))}
+              {(() => {
+                const maxVisible = 5;
+                const pages: (number | string)[] = [];
+                
+                if (totalPages <= maxVisible) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  
+                  if (currentPage > 3) {
+                    pages.push('...');
+                  }
+                  
+                  const start = Math.max(2, currentPage - 1);
+                  const end = Math.min(totalPages - 1, currentPage + 1);
+                  
+                  for (let i = start; i <= end; i++) {
+                    if (!pages.includes(i)) pages.push(i);
+                  }
+                  
+                  if (currentPage < totalPages - 2) {
+                    pages.push('...');
+                  }
+                  
+                  if (!pages.includes(totalPages)) pages.push(totalPages);
+                }
+                
+                return pages.map((page, idx) => 
+                  typeof page === 'string' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground text-xs">
+                      {page}
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => goToPage(page)}
+                      className="h-8 w-8 p-0 text-xs"
+                    >
+                      {page}
+                    </Button>
+                  )
+                );
+              })()}
             </div>
             
             <Button
