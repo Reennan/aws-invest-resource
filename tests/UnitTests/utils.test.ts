@@ -26,4 +26,60 @@ describe('cn (className merger)', () => {
     const result = cn('base', { active: true, disabled: false });
     expect(result).toBe('base active');
   });
+
+  it('deve lidar com arrays de classes', () => {
+    const result = cn(['class1', 'class2'], 'class3');
+    expect(result).toBe('class1 class2 class3');
+  });
+
+  it('deve lidar com string vazia', () => {
+    const result = cn('', 'class1');
+    expect(result).toBe('class1');
+  });
+
+  it('deve lidar com múltiplos objetos condicionais', () => {
+    const isActive = true;
+    const isDisabled = false;
+    const result = cn(
+      'base',
+      { 'bg-blue-500': isActive },
+      { 'opacity-50': isDisabled }
+    );
+    expect(result).toBe('base bg-blue-500');
+  });
+
+  it('deve sobrescrever classes conflitantes do Tailwind', () => {
+    const result = cn('text-red-500', 'text-blue-500');
+    expect(result).toBe('text-blue-500');
+  });
+
+  it('deve manter classes não conflitantes', () => {
+    const result = cn('text-red-500', 'bg-blue-500');
+    expect(result).toBe('text-red-500 bg-blue-500');
+  });
+
+  it('deve lidar com classes de tamanho', () => {
+    const result = cn('w-4', 'h-4', 'w-8');
+    expect(result).toBe('h-4 w-8');
+  });
+
+  it('deve lidar com classes de espaçamento', () => {
+    const result = cn('p-2', 'p-4');
+    expect(result).toBe('p-4');
+  });
+
+  it('deve lidar com todas as entradas vazias', () => {
+    const result = cn('', undefined, null, false);
+    expect(result).toBe('');
+  });
+
+  it('deve lidar com classes de hover e focus', () => {
+    const result = cn('hover:bg-red-500', 'hover:bg-blue-500');
+    expect(result).toBe('hover:bg-blue-500');
+  });
+
+  it('deve manter variantes diferentes', () => {
+    const result = cn('hover:bg-red-500', 'focus:bg-blue-500');
+    expect(result).toBe('hover:bg-red-500 focus:bg-blue-500');
+  });
 });
