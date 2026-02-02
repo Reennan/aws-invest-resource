@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar1 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
@@ -25,6 +23,15 @@ interface PieData {
   percentage: number;
 }
 
+type UnusedByTypeApiItem = {
+  type?: string;
+  total?: number | string;
+  count?: number | string;
+  value?: number | string;
+  resource_type?: string;
+  name?: string;
+};
+
 const CHART_COLORS = [
   'hsl(var(--chart-pie-1))',
   'hsl(var(--chart-pie-2))', 
@@ -39,6 +46,20 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [pieData, setPieData] = useState<PieData[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const normalizeUnusedByType = (items: UnusedByTypeApiItem[] | null | undefined) => {
+    return (items ?? [])
+      .map((item) => {
+        const name = item.type ?? item.resource_type ?? item.name ?? 'Desconhecido';
+        const raw = item.total ?? item.count ?? item.value ?? 0;
+        const value = Number(raw);
+        return {
+          name,
+          value: Number.isFinite(value) ? value : 0,
+        };
+      })
+      .filter((x) => x.value > 0);
+  };
 
   const fetchChartData = async () => {
     const startDate = subDays(new Date(), periodDays);
@@ -103,17 +124,19 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
       setChartData(formattedData);
 
       // Fetch unused resources by type for pie chart
-      const unusedByType = await apiClient.getUnusedByType();
+      const unusedByTypeRaw = (await apiClient.getUnusedByType()) as UnusedByTypeApiItem[];
+      const normalized = normalizeUnusedByType(unusedByTypeRaw);
+      const total = normalized.reduce((sum, item) => sum + item.value, 0);
 
-      if (unusedByType && unusedByType.length > 0) {
-        const total = unusedByType.reduce((sum, item) => sum + (item.total || 0), 0);
-        const pieFormattedData: PieData[] = unusedByType.map(item => ({
-          name: item.type || 'Desconhecido',
-          value: item.total || 0,
-          percentage: total > 0 ? Math.round(((item.total || 0) / total) * 100) : 0,
-        }));
-        setPieData(pieFormattedData);
-      }
+      setPieData(
+        total > 0
+          ? normalized.map((item) => ({
+              name: item.name,
+              value: item.value,
+              percentage: Math.round((item.value / total) * 100),
+            }))
+          : [],
+      );
 
     } catch (error) {
       console.error('Error fetching chart data:', error);
@@ -272,6 +295,9 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
                       outerRadius={100}
                       innerRadius={50}
                       dataKey="value"
+                      nameKey="name"
+                      isAnimationActive={false}
+                      labelLine={false}
                       stroke="hsl(var(--background))"
                       strokeWidth={2}
                     >
