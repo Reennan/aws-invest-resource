@@ -245,77 +245,74 @@ export const DashboardCharts = ({ refreshTrigger }: DashboardChartsProps) => {
                 <span className="text-muted-foreground">Carregando dados...</span>
               </div>
             </div>
-          ) : (
-            <div className="bg-background/80 backdrop-blur-sm rounded-xl p-4 border border-border/30">
-              <ResponsiveContainer width="100%" height={400}>
-                <div className="space-y-4">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <defs>
-                        {pieData.map((_, index) => (
-                          <linearGradient key={index} id={`pieGradient${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={`hsl(var(--chart-pie-${(index % 6) + 1}))`} stopOpacity={0.9}/>
-                            <stop offset="100%" stopColor={`hsl(var(--chart-pie-${(index % 6) + 1}))`} stopOpacity={0.7}/>
-                          </linearGradient>
-                        ))}
-                      </defs>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        innerRadius={50}
-                        dataKey="value"
-                        stroke="hsl(var(--background))"
-                        strokeWidth={2}
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={`url(#pieGradient${index})`}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [`${value} recursos`, name]}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--popover))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '12px',
-                          boxShadow: 'var(--shadow-elegant)',
-                          backdropFilter: 'blur(8px)'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  
-                  {/* Custom Legend */}
-                  <div className="grid grid-cols-1 gap-2 max-h-[120px] overflow-y-auto">
-                    {pieData.map((item, index) => (
-                      <div key={item.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-border/30">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-3 w-3 rounded-full border border-border/50"
-                            style={{ backgroundColor: `hsl(var(--chart-pie-${(index % 6) + 1}))` }}
-                          ></div>
-                          <span className="text-sm font-medium text-foreground truncate">{item.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-foreground">{item.value}</div>
-                          <div className="text-xs text-muted-foreground">{item.percentage}%</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </ResponsiveContainer>
-            </div>
-          )}
-          {!loading && pieData.length === 0 && (
+          ) : pieData.length === 0 ? (
             <div className="h-[400px] flex items-center justify-center">
               <div className="text-center space-y-2">
-                <div className="text-muted-foreground">Nenhum dado disponível</div>
+                <div className="text-muted-foreground">Nenhum recurso sem uso encontrado</div>
                 <div className="text-xs text-muted-foreground/70">Aguarde novas execuções para ver os dados</div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-background/80 backdrop-blur-sm rounded-xl p-4 border border-border/30">
+              <div className="flex flex-col gap-4">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <defs>
+                      {pieData.map((_, index) => (
+                        <linearGradient key={index} id={`pieGradient${index}`} x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor={CHART_COLORS[index % CHART_COLORS.length]} stopOpacity={0.9}/>
+                          <stop offset="100%" stopColor={CHART_COLORS[index % CHART_COLORS.length]} stopOpacity={0.7}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={50}
+                      dataKey="value"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={2}
+                    >
+                      {pieData.map((_, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name) => [`${value} recursos`, name]}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: 'var(--shadow-elegant)',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Custom Legend */}
+                <div className="grid grid-cols-1 gap-2 max-h-[120px] overflow-y-auto">
+                  {pieData.map((item, index) => (
+                    <div key={item.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-border/30">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-3 w-3 rounded-full border border-border/50"
+                          style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                        ></div>
+                        <span className="text-sm font-medium text-foreground truncate">{item.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-foreground">{item.value}</div>
+                        <div className="text-xs text-muted-foreground">{item.percentage}%</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
